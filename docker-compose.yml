@@ -1,0 +1,30 @@
+name: aerovault
+
+services:
+  backend:
+    build: ./backend
+    container_name: aerovault-backend
+    env_file:
+      - .env
+    environment:
+      AEROVAULT_ENV: dev
+      AEROVAULT_DATA_DIR: /data
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./data:/data
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build: ./frontend
+    container_name: aerovault-frontend
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:8000
+    ports:
+      - "127.0.0.1:5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
