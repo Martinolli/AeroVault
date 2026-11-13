@@ -1,9 +1,9 @@
 # 1 — Aviation Library Assistant: Project Plan
 
-**Version:** 0.5 (Gate 1 passed — Phase 2 ingestion implemented)
+**Version:** 0.6 (Phase 2 index complete — Gate 2 scoring pending)
 **Date:** 2026-11-13
 **Owner:** J. B. Martinolli
-**Status:** Gates 0 and 1 passed. Phase 2 ingestion pipeline and benchmark runner implemented; owner to run the Docker ingestion and benchmark.
+**Status:** Gates 0 and 1 passed. Phase 2 complete: 471 documents indexed with text + vectors (51 scanned books await OCR); hybrid benchmark run. Gate 2 scoring waits on owner confirmation of expected pages.
 
 ---
 
@@ -191,6 +191,6 @@ All templates are user-editable and stored in configuration, not hard-coded.
 ## 17. Immediate next steps
 
 1. Owner runs `docker compose up --build -d`, then the ingestion batches (`python -m app.ingest.pipeline scan` and `ingest --limit 20` repeatedly) with the OpenAI key in `.env`.
-2. Owner fills expected pages in `benchmark_expected.csv`, runs the benchmark runner; Gate 2 review (top-5 recall ≥ 80%).
+2. Owner fills expected pages in `benchmark_expected.csv` (manual, or auto-fill + spot-check), runs the benchmark runner; Gate 2 review (top-5 recall ≥ 80%).
 3. Phase 3: login, cited chat, library browser, PDF viewer, settings.
-4. OCR background re-ingest of the 53 scanned documents (D-018) after the first index.
+4. OCR background re-ingest of the 51 scanned books with no text layer (D-018), timing to be confirmed by the owner.

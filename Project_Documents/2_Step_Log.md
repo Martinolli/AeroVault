@@ -40,7 +40,7 @@ Chronological record of actions, decisions, results and next steps. Updated at e
 |------|-------|--------|-------------|
 | Gate 0 | Discovery and inspection | **PASSED** — owner sign-off (parsing 630/639, 210,502 pp; duplicates quarantined) | 2026-11-13 |
 | Gate 1 | Foundation and design | **PASSED** — architecture and UX approved; skeleton committed (`ff92d82`) | 2026-11-13 |
-| Gate 2 | Ingestion MVP | Code complete — awaiting owner run (ingestion + benchmark) | — |
+| Gate 2 | Ingestion MVP | Pipeline complete: 471 docs indexed (184,317 vectors = SQLite chunks); hybrid benchmark run (median 1.43 s). Awaiting expected pages + owner review | — |
 | Gate 3 | App MVP | Not started | — |
 | Gate 4 | Workflows and export | Not started | — |
 | Gate 5 | Hardening and handover | Not started | — |
@@ -86,3 +86,4 @@ Chronological record of actions, decisions, results and next steps. Updated at e
 | D-048 | `text_only` status + `vectors-only` backfill; `vectors` column | Implemented | 2026-11-13 |
 | D-049 | OpenAI embeddings deferred — API project has no credits (429 `credit_balance_exhausted` even with the new key) | Open — owner action | 2026-11-13 |
 | D-050 | Per-document PDF passwords in git-ignored `data/pdf_passwords.json` (DO-160F: `mk3ja5`) | Implemented | 2026-11-13 |
+| S-028 | 2026-11-14 | P2 — Ingestion MVP | Overnight backfill stopped early at 374/467 (session reset at ~01:00). Reran `vectors-only`: remaining 62 documents embedded in ~5 min (API throughput far above the earlier 40k TPM). Final index: **471/522 documents indexed** (every text-bearing document), 51 scanned books `text_only` (OCR pending); LanceDB **184,317 rows = 184,317 chunks** in indexed documents (exact match). `latest_version_hint.json` write warnings persist (OneDrive/AV lock) but are non-fatal; LanceDB recovers to the latest version. Hybrid benchmark (BM25 + vectors, RRF): 25 questions, median **1.43 s** (max 7.27 s) vs BM25 0.85 s; rough doc-hint check shows hybrid fixes Q2, Q5, Q7, Q12, Q17, Q19, Q22 and regresses Q1, Q10 → tune RRF weights before Gate 2. Results in `data/benchmark_results_hybrid.csv`. Stray `C:\data\aerovault.db` deleted. | Phase 2 pipeline complete; Gate 2 scoring blocked on `benchmark_expected.csv` (owner decision: manual confirmation vs auto-fill + spot-check). | Owner answers: OCR now/later; expected-pages method; Phase 3 start |
