@@ -1,9 +1,9 @@
 # 1 — Aviation Library Assistant: Project Plan
 
-**Version:** 0.4 (Gate 0 complete — inspection findings incorporated)
+**Version:** 0.5 (Gate 1 passed — Phase 2 ingestion implemented)
 **Date:** 2026-11-13
 **Owner:** J. B. Martinolli
-**Status:** Gate 0 complete, awaiting owner sign-off; Phase 1 ready to start
+**Status:** Gates 0 and 1 passed. Phase 2 ingestion pipeline and benchmark runner implemented; owner to run the Docker ingestion and benchmark.
 
 ---
 
@@ -190,7 +190,7 @@ All templates are user-editable and stored in configuration, not hard-coded.
 
 ## 17. Immediate next steps
 
-1. Owner answers the six Gate 0 questions in `3_Inspection_Report.md` §11 (Gate 0 sign-off, OCR scope, bowties password, quarantine retention, DO-160F rename, project location).
-2. Phase 1 begins: repository skeleton, Docker Compose baseline, backend/frontend scaffold, local git.
-3. Wireframes (`5_Wireframes.md`) and benchmark (`6_Retrieval_Benchmark.md`) reviewed during Phase 1 design.
-4. Architecture decision records started (`7_Architecture_Decisions.md`).
+1. Owner runs `docker compose up --build -d`, then the ingestion batches (`python -m app.ingest.pipeline scan` and `ingest --limit 20` repeatedly) with the OpenAI key in `.env`.
+2. Owner fills expected pages in `benchmark_expected.csv`, runs the benchmark runner; Gate 2 review (top-5 recall ≥ 80%).
+3. Phase 3: login, cited chat, library browser, PDF viewer, settings.
+4. OCR background re-ingest of the 53 scanned documents (D-018) after the first index.

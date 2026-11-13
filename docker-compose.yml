@@ -15,6 +15,7 @@ services:
     volumes:
       - ./data:/data
       - ./backend:/app
+      - ./Project_Documents:/docs:ro
       - "${AEROVAULT_LIBRARY_ROOT:-./library}:/library:ro"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 

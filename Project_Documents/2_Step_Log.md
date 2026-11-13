@@ -26,6 +26,9 @@ Chronological record of actions, decisions, results and next steps. Updated at e
 | S-018 | 2026-11-13 | Gate 0 → P1 | Owner accepted Gate 0 and all recommendations (Q1–Q5 yes; keep project folder as is). DO-160F renamed to `DO-160F.pdf`. | **Gate 0 PASSED.** Phase 1 authorized. | Phase 1 foundation |
 | S-019 | 2026-11-13 | P1 — Foundation | Created repository skeleton: FastAPI backend (health endpoint, settings), React/Vite/TS/Tailwind frontend, Docker Compose baseline with localhost-only ports, README, `.env.example`, `.gitignore`; wrote `7_Architecture_Decisions.md` (D-023–D-030). | `py_compile` OK. Local git repo initialized; initial commit `ff92d82` (26 files) with Manus co-author trailer; `safe.directory` exception added (folder owner SID differs from session account). | Gate 1 owner review |
 | S-020 | 2026-11-13 | Gate 1 → P2 | Owner approved the architecture (D-023–D-030) and all recommended answers. Device access was revoked mid-review and re-authorized by the owner. | **Gate 1 PASSED.** Decisions D-031–D-037 recorded. Phase 2 (ingestion MVP) authorized. | Build ingestion pipeline |
+| S-021 | 2026-11-13 | P2 — Ingestion MVP | Built ingestion pipeline: scanner (SHA-256 incremental), PyMuPDF/pypdf extraction, Tesseract OCR hook, page-aware chunker, SQLite pages/chunks + FTS5 triggers, LiteLLM/HTTP embeddings, LanceDB vectors, CLI (`scan`/`ingest`/`status`). | Scan of the real library: 522 PDFs (639 − 117 quarantined), 0 unreadable. Local smoke test: 3 Quality docs extracted and chunked (9 chunks), FTS query returns ranked snippets. Commit `ffaeb1b`. | Retrieval + benchmark |
+| S-022 | 2026-11-13 | P2 — Ingestion MVP | Created private GitHub repo `github.com/Martinolli/AeroVault` and pushed `main` (Gate 1 approval, D-037). | Repo live; origin tracking `main`. | Retrieval layer |
+| S-023 | 2026-11-13 | P2 — Ingestion MVP | Built hybrid retrieval (FTS5 BM25 + LanceDB vectors, RRF merge) and benchmark runner (parses the 25-question benchmark, writes top-5 CSV, scores against `benchmark_expected.csv`). | Local BM25 smoke test OK. Commit pending push. | Owner runs Docker ingestion + benchmark |
 
 ## Gate status
 
@@ -33,7 +36,7 @@ Chronological record of actions, decisions, results and next steps. Updated at e
 |------|-------|--------|-------------|
 | Gate 0 | Discovery and inspection | **PASSED** — owner sign-off (parsing 630/639, 210,502 pp; duplicates quarantined) | 2026-11-13 |
 | Gate 1 | Foundation and design | **PASSED** — architecture and UX approved; skeleton committed (`ff92d82`) | 2026-11-13 |
-| Gate 2 | Ingestion MVP | Not started | — |
+| Gate 2 | Ingestion MVP | Code complete — awaiting owner run (ingestion + benchmark) | — |
 | Gate 3 | App MVP | Not started | — |
 | Gate 4 | Workflows and export | Not started | — |
 | Gate 5 | Hardening and handover | Not started | — |

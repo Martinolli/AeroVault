@@ -3,7 +3,7 @@
 **Project:** AeroVault — local aviation library and LLM decision-support tool
 **Version:** 0.1 (draft for Gate 1 owner review)
 **Date:** 2026-11-13
-**Status:** Draft — pending Gate 1 approval
+**Status:** Approved at Gate 1 (2026-11-13); Phase 2 implemented
 
 ## 1. Context
 
@@ -50,3 +50,21 @@ The decisions below define the Phase 1 foundation. They will be revisited if the
 3. **Default chat model** — `gpt-4o-mini` (cheap, fast) as default with a per-query switch to a stronger reasoning model, or a stronger default from the start?
 4. **Query history** — should the app keep a searchable history of questions/answers by default (useful for audit and reuse), or keep sessions ephemeral?
 5. **Embeddings** — `text-embedding-3-small` as default (cheaper, ~5x less than large), or `-large` for better retrieval quality?
+
+## 6. Gate 1 approval (2026-11-13)
+
+The owner approved the architecture and all recommendations. Resolutions: light "aviation chart" UI with dark mode later (D-032); ports 5173/8000 in development, single 8080 at release (D-033); `gpt-4o-mini` default with per-query switch (D-034); searchable history with delete (D-035); `text-embedding-3-small` first (D-036); private GitHub repo created (D-037).
+
+## 7. Phase 2 implementation decisions
+
+| ID | Decision | Rationale | Status |
+|----|----------|-----------|--------|
+| D-038 | BM25 via SQLite FTS5 over a `chunks` table, kept in sync with triggers | No extra service; works offline; hybrid partner for vectors | Implemented |
+| D-039 | Page-aware chunking: 3,000 characters (~750 tokens) with 400-character overlap, never crossing pages | Page-level citations require page-safe chunks | Implemented |
+| D-040 | Reciprocal Rank Fusion (k=60) to merge BM25 and vector result lists | Simple, robust, no training needed | Implemented |
+| D-041 | Benchmark runner parses `6_Retrieval_Benchmark.md`, writes top-5 CSV; scoring once `benchmark_expected.csv` (qnum, doc_contains, page) is filled | Gate 2 evidence with minimal manual work | Implemented |
+| D-042 | Private GitHub repo `github.com/Martinolli/AeroVault`, pushed from the owner's `gh` login | Version control after Gate 1 approval (D-037) | Done |
+
+**Extraction order:** PyMuPDF primary, pypdf fallback (offline mode); Tesseract OCR opt-in via `--ocr` for the 53 scanned documents (D-018), run as a background re-ingest after the first index.
+
+**Vectors:** written to LanceDB table `chunks` (vector, document_id, page_no, chunk_id); document vectors are deleted and re-added on re-ingest.
