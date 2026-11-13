@@ -53,7 +53,7 @@ The decisions below define the Phase 1 foundation. They will be revisited if the
 
 ## 6. Gate 1 approval (2026-11-13)
 
-The owner approved the architecture and all recommendations. Resolutions: light "aviation chart" UI with dark mode later (D-032); ports 5173/8000 in development, single 8080 at release (D-033); `gpt-4o-mini` default with per-query switch (D-034); searchable history with delete (D-035); `text-embedding-3-small` first (D-036); private GitHub repo created (D-037).
+The owner approved the architecture and all recommendations. Resolutions: light "aviation chart" UI with dark mode later (D-032); host ports 5273/18000 in development because 5173/8000 are occupied by other local containers, container ports unchanged, single 8080 at release (D-033); `gpt-4o-mini` default with per-query switch (D-034); searchable history with delete (D-035); `text-embedding-3-small` first (D-036); private GitHub repo created (D-037). Phase 3 UX: first-run password setup, 8-hour sessions with remember-me, streaming answers, PDF.js in-app viewer (D-043–D-046).
 
 ## 7. Phase 2 implementation decisions
 

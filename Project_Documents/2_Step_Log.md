@@ -29,6 +29,7 @@ Chronological record of actions, decisions, results and next steps. Updated at e
 | S-021 | 2026-11-13 | P2 — Ingestion MVP | Built ingestion pipeline: scanner (SHA-256 incremental), PyMuPDF/pypdf extraction, Tesseract OCR hook, page-aware chunker, SQLite pages/chunks + FTS5 triggers, LiteLLM/HTTP embeddings, LanceDB vectors, CLI (`scan`/`ingest`/`status`). | Scan of the real library: 522 PDFs (639 − 117 quarantined), 0 unreadable. Local smoke test: 3 Quality docs extracted and chunked (9 chunks), FTS query returns ranked snippets. Commit `ffaeb1b`. | Retrieval + benchmark |
 | S-022 | 2026-11-13 | P2 — Ingestion MVP | Created private GitHub repo `github.com/Martinolli/AeroVault` and pushed `main` (Gate 1 approval, D-037). | Repo live; origin tracking `main`. | Retrieval layer |
 | S-023 | 2026-11-13 | P2 — Ingestion MVP | Built hybrid retrieval (FTS5 BM25 + LanceDB vectors, RRF merge) and benchmark runner (parses the 25-question benchmark, writes top-5 CSV, scores against `benchmark_expected.csv`). | Local BM25 smoke test OK. Commit pending push. | Owner runs Docker ingestion + benchmark |
+| S-024 | 2026-11-13 | P2 — Ingestion MVP | Owner built the images but `docker compose up` failed: host port 8000 already allocated (old Docker containers proxied on 8000/5173). Diagnosed via `netstat`/`Get-Process` (com.docker.backend). Moved host ports to 18000 (API) and 5273 (UI); container ports unchanged. Owner confirmed Phase 3 UX choices (D-043–D-046). | Compose/README/ADR updated; awaiting owner re-run of `docker compose up -d` and ingestion. | Owner re-runs compose + scan/ingest |
 
 ## Gate status
 
@@ -74,3 +75,7 @@ Chronological record of actions, decisions, results and next steps. Updated at e
 | D-035 | Searchable question/answer history kept by default, with per-item delete | Approved by owner | 2026-11-13 |
 | D-036 | Embeddings `text-embedding-3-small` first; benchmark decides if `-large` is needed | Approved by owner | 2026-11-13 |
 | D-037 | GitHub: create private repo `AeroVault` and push after Gate 1 approval | Approved by owner | 2026-11-13 |
+| D-043 | Login: first-run password setup screen (no password in `.env`) | Approved by owner | 2026-11-13 |
+| D-044 | Sessions: 8-hour expiry with optional "remember me" | Approved by owner | 2026-11-13 |
+| D-045 | Chat: streaming answers | Approved by owner | 2026-11-13 |
+| D-046 | Citations open the page in-app via PDF.js | Approved by owner | 2026-11-13 |

@@ -37,10 +37,10 @@ Copy-Item .env.example .env
 docker compose up --build -d
 ```
 
-- UI: http://127.0.0.1:5173
-- API health: http://127.0.0.1:8000/api/health
+- UI: http://127.0.0.1:5273
+- API health: http://127.0.0.1:18000/api/health
 
-Both ports are bound to `127.0.0.1` only; nothing is exposed to the network. The library is mounted read-only at `/library`.
+Both host ports are bound to `127.0.0.1` only; nothing is exposed to the network. Host ports 18000/5273 were chosen because 8000/5173 are used by other local containers. The library is mounted read-only at `/library`.
 
 ## Ingestion (Phase 2)
 
