@@ -9,11 +9,13 @@ services:
     environment:
       AEROVAULT_ENV: dev
       AEROVAULT_DATA_DIR: /data
+      AEROVAULT_LIBRARY_ROOT: /library
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./data:/data
       - ./backend:/app
+      - "${AEROVAULT_LIBRARY_ROOT:-./library}:/library:ro"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:

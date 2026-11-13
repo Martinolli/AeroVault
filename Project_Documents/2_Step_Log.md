@@ -24,13 +24,15 @@ Chronological record of actions, decisions, results and next steps. Updated at e
 | S-016 | 2026-11-13 | P0 — Discovery | Applied quarantine (`dedupe.py --apply`). | 117 duplicate files (1,019.5 MB) moved to `AeroVault\_QUARANTINE\DUPLICATES`; nothing deleted. | Gate 0 report |
 | S-017 | 2026-11-13 | P0 — Discovery | Published `3_Inspection_Report.md` v1.0 with final Gate 0 findings and six owner questions (OCR scope, bowties password, quarantine retention, DO-160F rename, project location). | Gate 0 recommended PASS, pending owner sign-off. | Owner Gate 0 review |
 | S-018 | 2026-11-13 | Gate 0 → P1 | Owner accepted Gate 0 and all recommendations (Q1–Q5 yes; keep project folder as is). DO-160F renamed to `DO-160F.pdf`. | **Gate 0 PASSED.** Phase 1 authorized. | Phase 1 foundation |
+| S-019 | 2026-11-13 | P1 — Foundation | Created repository skeleton: FastAPI backend (health endpoint, settings), React/Vite/TS/Tailwind frontend, Docker Compose baseline with localhost-only ports, README, `.env.example`, `.gitignore`; wrote `7_Architecture_Decisions.md` (D-023–D-030). | `py_compile` OK. Local git repo initialized; initial commit `ff92d82` (26 files) with Manus co-author trailer; `safe.directory` exception added (folder owner SID differs from session account). | Gate 1 owner review |
+| S-020 | 2026-11-13 | Gate 1 → P2 | Owner approved the architecture (D-023–D-030) and all recommended answers. Device access was revoked mid-review and re-authorized by the owner. | **Gate 1 PASSED.** Decisions D-031–D-037 recorded. Phase 2 (ingestion MVP) authorized. | Build ingestion pipeline |
 
 ## Gate status
 
 | Gate | Phase | Status | Date passed |
 |------|-------|--------|-------------|
 | Gate 0 | Discovery and inspection | **PASSED** — owner sign-off (parsing 630/639, 210,502 pp; duplicates quarantined) | 2026-11-13 |
-| Gate 1 | Foundation and design | In progress | — |
+| Gate 1 | Foundation and design | **PASSED** — architecture and UX approved; skeleton committed (`ff92d82`) | 2026-11-13 |
 | Gate 2 | Ingestion MVP | Not started | — |
 | Gate 3 | App MVP | Not started | — |
 | Gate 4 | Workflows and export | Not started | — |
@@ -62,3 +64,10 @@ Chronological record of actions, decisions, results and next steps. Updated at e
 | D-020 | Quarantine retained 30 days, then archived to ZIP outside the library | Approved by owner | 2026-11-13 |
 | D-021 | Rename `DO-160F (senha mk3ja5).pdf` → `DO-160F.pdf` | Approved and executed | 2026-11-13 |
 | D-022 | Project location: keep `DOCUMENTOS REVISION\AeroVault`; revisit before release | Approved by owner | 2026-11-13 |
+| D-031 | Architecture D-023–D-030 approved (monorepo, FastAPI, React/Vite/TS/Tailwind, SQLite + LanceDB, LiteLLM, Argon2id sessions, localhost-only compose, local git) | Approved by owner | 2026-11-13 |
+| D-032 | UI style: light "aviation chart" default; dark mode later | Approved by owner | 2026-11-13 |
+| D-033 | Ports: 5173 (UI) / 8000 (API) in development; single 8080 at release | Approved by owner | 2026-11-13 |
+| D-034 | Default chat model `gpt-4o-mini` with per-query switch to a stronger reasoning model | Approved by owner | 2026-11-13 |
+| D-035 | Searchable question/answer history kept by default, with per-item delete | Approved by owner | 2026-11-13 |
+| D-036 | Embeddings `text-embedding-3-small` first; benchmark decides if `-large` is needed | Approved by owner | 2026-11-13 |
+| D-037 | GitHub: create private repo `AeroVault` and push after Gate 1 approval | Approved by owner | 2026-11-13 |

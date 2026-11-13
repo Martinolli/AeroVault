@@ -13,6 +13,7 @@ class Settings(BaseSettings):
 
     env: str = "dev"
     data_dir: str = "/data"
+    library_root: str = "/library"
     openai_api_key: str | None = None
     chat_model: str = "gpt-4o-mini"
     embedding_model: str = "text-embedding-3-small"
