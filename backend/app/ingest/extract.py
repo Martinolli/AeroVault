@@ -29,11 +29,13 @@ def _ocr_fitz_page(page) -> str:
         return ""
 
 
-def _extract_fitz(path: Path, ocr: bool) -> list[PageText]:
+def _extract_fitz(path: Path, ocr: bool, password: str) -> list[PageText]:
     import fitz
 
     pages: list[PageText] = []
     with fitz.open(str(path)) as doc:
+        if doc.needs_pass and password:
+            doc.authenticate(password)
         for i, page in enumerate(doc, start=1):
             text = page.get_text("text") or ""
             used = False
@@ -46,15 +48,21 @@ def _extract_fitz(path: Path, ocr: bool) -> list[PageText]:
     return pages
 
 
-def _extract_pypdf(path: Path) -> list[PageText]:
+def _extract_pypdf(path: Path, password: str) -> list[PageText]:
     from pypdf import PdfReader
 
     reader = PdfReader(str(path))
     if reader.is_encrypted:
-        try:
-            reader.decrypt("")
-        except Exception:
-            pass
+        decrypted = False
+        for candidate in ("", password):
+            try:
+                if reader.decrypt(candidate):
+                    decrypted = True
+                    break
+            except Exception:  # noqa: BLE001
+                continue
+        if not decrypted:
+            raise ValueError("PDF is encrypted and no valid password was provided")
     pages: list[PageText] = []
     for i, page in enumerate(reader.pages, start=1):
         try:
@@ -65,9 +73,12 @@ def _extract_pypdf(path: Path) -> list[PageText]:
     return pages
 
 
-def extract_pages(path: Path, ocr: bool = False) -> tuple[list[PageText], str]:
+def extract_pages(path: Path, ocr: bool = False, password: str = "") -> tuple[list[PageText], str]:
     """Extract page text. Returns (pages, engine). Raises on unreadable files."""
     try:
-        return _extract_fitz(path, ocr), "pymupdf"
+        return _extract_fitz(path, ocr, password), "pymupdf"
     except ImportError:
-        return _extract_pypdf(path), "pypdf"
+        return _extract_pypdf(path, password), "pypdf"
+    except Exception:
+        # Some AES-encrypted or damaged PDFs fail in PyMuPDF; pypdf often handles them.
+        return _extract_pypdf(path, password), "pypdf"

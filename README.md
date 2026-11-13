@@ -44,25 +44,26 @@ Both host ports are bound to `127.0.0.1` only; nothing is exposed to the network
 
 ## Ingestion (Phase 2)
 
-Run inside the backend container:
+**Use the native runner (recommended).** The Docker bind mount to a OneDrive folder is
+about 40x slower for file reads (a full scan took 31 s natively vs 20+ min in Docker,
+with no progress). Native ingestion writes to the same `data/` folder the app uses.
 
 ```powershell
-# 1. Discover PDFs and hash them (fast, no API calls)
-docker compose exec backend python -m app.ingest.pipeline scan
+# one-time: install native libs
+py -3 -m pip install --target .work\native_libs pydantic-settings pypdf pymupdf lancedb litellm pillow pytesseract
 
-# 2. Extract, chunk, embed and index in batches (API calls)
-docker compose exec backend python -m app.ingest.pipeline ingest --limit 20
-# repeat until it reports "Nothing to ingest."
-
-# 3. Status
-docker compose exec backend python -m app.ingest.pipeline status
+.\scripts\ingest.ps1 scan            # discover + hash (seconds)
+.\scripts\ingest.ps1 ingest -NoVectors   # full text index, no API calls
+.\scripts\ingest.ps1 vectors-only    # embeddings + LanceDB (needs API credits)
+.\scripts\ingest.ps1 status
 ```
 
 Notes:
 
-- Set `AEROVAULT_OPENAI_API_KEY` **before** ingesting; without it the pipeline indexes text only (no vectors).
+- Without API credits the pipeline indexes text only (`text_only` status); `vectors-only` backfills vectors later.
+- The Docker route still works: `docker compose exec backend python -m app.ingest.pipeline ...` but is much slower on OneDrive.
 - OCR for the 53 scanned documents (D-018), after the first index:
-  `docker compose exec backend python -m app.ingest.pipeline ingest --ocr --force --collection "Aircraft Theory"` (and the other collections).
+  `.\scripts\ingest.ps1 ingest -Ocr -Force -Collection "Aircraft Theory"` (and the other collections).
 - Ingestion is incremental: unchanged files (same SHA-256) are skipped; changed files are re-indexed.
 
 ## Retrieval and benchmark (Gate 2)

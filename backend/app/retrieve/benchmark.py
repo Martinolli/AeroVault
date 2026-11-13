@@ -33,6 +33,8 @@ def parse_questions(md_path: Path) -> list[dict]:
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         if len(cells) < 5:
             continue
+        if len(cells[1]) < 8:
+            continue  # recording-template rows such as "| 1 | 1 | ..."
         questions.append({
             "num": int(cells[0]),
             "question": cells[1],

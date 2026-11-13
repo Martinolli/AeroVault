@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import os
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .collections import EXCLUDE_PARTS, classify_path
+from .collections import COLLECTIONS, EXCLUDE_PARTS, classify_path
 
 
 def sha256_file(path: Path, buf_size: int = 1024 * 1024) -> str:
@@ -19,11 +20,16 @@ def sha256_file(path: Path, buf_size: int = 1024 * 1024) -> str:
 
 
 def iter_pdfs(root: Path):
-    for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d not in EXCLUDE_PARTS]
-        for name in filenames:
-            if name.lower().endswith(".pdf"):
-                yield Path(dirpath) / name
+    """Walk only the three collection folders (never the whole library root)."""
+    for prefix in COLLECTIONS.values():
+        collection_root = root / Path(prefix)
+        if not collection_root.exists():
+            continue
+        for dirpath, dirnames, filenames in os.walk(collection_root):
+            dirnames[:] = [d for d in dirnames if d not in EXCLUDE_PARTS]
+            for name in filenames:
+                if name.lower().endswith(".pdf"):
+                    yield Path(dirpath) / name
 
 
 def scan(root: Path, conn) -> dict:
@@ -34,8 +40,12 @@ def scan(root: Path, conn) -> dict:
     }
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     counts = {"new": 0, "changed": 0, "unchanged": 0, "unreadable": 0, "skipped": 0}
+    seen = 0
 
     for path in iter_pdfs(root):
+        seen += 1
+        if seen % 25 == 0:
+            print(f"  scanned {seen} files...", file=sys.stderr, flush=True)
         rel = path.relative_to(root).as_posix()
         collection = classify_path(rel)
         if collection is None:

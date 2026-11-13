@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS documents (
     pages INTEGER,
     text_pages INTEGER,
     ocr_pages INTEGER,
+    vectors INTEGER NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'pending',
     error TEXT,
     updated_at TEXT
@@ -68,6 +69,11 @@ def connect(db_path: Path) -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.executescript(SCHEMA)
+    # Migration for databases created before the vectors column existed.
+    try:
+        conn.execute("ALTER TABLE documents ADD COLUMN vectors INTEGER NOT NULL DEFAULT 0")
+    except sqlite3.OperationalError:
+        pass
     return conn
 
 
@@ -112,13 +118,18 @@ def set_status(
     )
 
 
+def set_vectors(conn: sqlite3.Connection, doc_id: int, ok: bool) -> None:
+    conn.execute("UPDATE documents SET vectors = ? WHERE id = ?", (int(ok), doc_id))
+
+
 def stats(conn: sqlite3.Connection) -> dict:
     rows = conn.execute(
         "SELECT collection, status, COUNT(*) AS n FROM documents GROUP BY collection, status"
     ).fetchall()
-    out: dict = {"collections": {}, "documents": 0, "chunks": 0}
+    out: dict = {"collections": {}, "documents": 0, "chunks": 0, "vectors_done": 0}
     for r in rows:
         out["collections"].setdefault(r["collection"], {})[r["status"]] = r["n"]
         out["documents"] += r["n"]
     out["chunks"] = conn.execute("SELECT COUNT(*) FROM chunks").fetchone()[0]
+    out["vectors_done"] = conn.execute("SELECT COUNT(*) FROM documents WHERE vectors = 1").fetchone()[0]
     return out

@@ -64,7 +64,13 @@ The owner approved the architecture and all recommendations. Resolutions: light 
 | D-040 | Reciprocal Rank Fusion (k=60) to merge BM25 and vector result lists | Simple, robust, no training needed | Implemented |
 | D-041 | Benchmark runner parses `6_Retrieval_Benchmark.md`, writes top-5 CSV; scoring once `benchmark_expected.csv` (qnum, doc_contains, page) is filled | Gate 2 evidence with minimal manual work | Implemented |
 | D-042 | Private GitHub repo `github.com/Martinolli/AeroVault`, pushed from the owner's `gh` login | Version control after Gate 1 approval (D-037) | Done |
+| D-047 | Ingestion runs natively on Windows (`scripts/ingest.ps1`), not inside Docker: the bind mount to the OneDrive library is ~40x slower (full scan 31 s native vs 20+ min with no progress). The app stays in Docker; both share `data/` | Keeps daily re-indexing practical | Implemented |
+| D-048 | Status model `pending → text_only → indexed`; `vectors-only` backfills embeddings for text-indexed documents; `vectors` column tracks completion | Allows text/BM25 index without API credits, vectors added later | Implemented |
+| D-049 | OpenAI account returned 429 "no credits remaining"; embeddings deferred until billing is resolved (alternatives: add credits, Azure OpenAI, local model) | Blocker discovered during first ingest | Open — owner action |
+| D-050 | Per-document PDF passwords in git-ignored `data/pdf_passwords.json` (DO-160F: `mk3ja5`); extractor tries empty password, then the mapped one | Keeps secrets out of code while indexing encrypted standards | Implemented |
 
 **Extraction order:** PyMuPDF primary, pypdf fallback (offline mode); Tesseract OCR opt-in via `--ocr` for the 53 scanned documents (D-018), run as a background re-ingest after the first index.
 
 **Vectors:** written to LanceDB table `chunks` (vector, document_id, page_no, chunk_id); document vectors are deleted and re-added on re-ingest.
+
+**Ingestion runner:** `scripts/ingest.ps1` wraps `app.ingest.pipeline` with the native Python (`.work/native_libs`) and explicit `data/aerovault.db` / `data/lancedb` paths. The pipeline also scans only the three collection folders — never the whole library root (which contains 8,400+ other PDFs).
