@@ -3,7 +3,11 @@
 **Version:** 0.7 (Phase 3 app MVP built — Gate 3 review pending)
 **Date:** 2026-11-14
 **Owner:** J. B. Martinolli
-**Status:** Gates 0 and 1 passed. Phase 2 index complete (474 indexed, 1 partial, 47 `text_only` scanned books; 184k+ vectors) but **Gate 2 is not passed**: verified benchmark top-5 is 54.5% (12/22) vs the 80% target; the planned fix is LLM query expansion + reranking (D-054). Phase 3 MVP is built and verified locally (auth, library browser, cited streaming chat, PDF.js viewer); Gate 3 awaits owner review. OCR backfill is paused and resumable.
+**Status:** Gates 0 and 1 passed. Phase 2 index complete (498 indexed, 2 partial, 22 `text_only` 
+scanned books; 184k+ vectors). **Gate 2 is not passed**: the tuned retrieval (title-aware RRF, D-061) scores 
+top-5 63.6% (14/22) vs the 80% target; the LLM reranker (D-054) and `text-embedding-3-large` (D-062) were tested 
+and rejected. Phase 3 MVP is built and verified locally (auth, library browser, cited streaming chat, PDF.js 
+viewer); the owner reviewed it positively on 2026-11-14 (formal Gate 3 sign-off pending). OCR backfill is running.
 
 ---
 
@@ -103,6 +107,8 @@ Hybrid retrieval (BM25 + vector) → merge and deduplicate → optional rerank o
 | W5 | Study/refresh | Explains a concept with book citations and page links. |
 
 All templates are user-editable and stored in configuration, not hard-coded.
+
+**Proposed Phase 4 extension (pending owner approval):** upload an owner-supplied procedure (PDF/DOCX) in the UI, extract its text, select one or more standards, and produce a clause-by-clause compliance matrix (requirement, evidence found, gap/observation, citation to the standard page). Uploaded procedures are treated as untrusted input and are not added to the library unless the owner explicitly imports them.
 
 ## 10. Security and privacy
 

@@ -60,6 +60,10 @@ def is_match(hit, doc_contains: str, page: int | None) -> bool:
     return doc_ok and page_ok
 
 
+def is_doc_match(hit, doc_contains: str) -> bool:
+    return doc_contains in hit.title.lower() or doc_contains in hit.rel_path.lower()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="aerovault-benchmark")
     parser.add_argument("--benchmark", default="/docs/6_Retrieval_Benchmark.md")
@@ -77,6 +81,7 @@ def main() -> None:
 
     rows = []
     ranks: list[int | None] = []
+    doc_ranks: list[int | None] = []
     latencies: list[float] = []
     for q in questions:
         t0 = time.time()
@@ -85,14 +90,20 @@ def main() -> None:
         latencies.append(latency)
 
         rank = None
+        doc_rank = None
         if q["num"] in expected:
             doc_contains, page = expected[q["num"]]
             for i, hit in enumerate(hits, start=1):
                 if is_match(hit, doc_contains, page):
                     rank = i
                     break
+            for i, hit in enumerate(hits, start=1):
+                if is_doc_match(hit, doc_contains):
+                    doc_rank = i
+                    break
             if q["answerable"]:
                 ranks.append(rank)
+                doc_ranks.append(doc_rank)
 
         for i, hit in enumerate(hits, start=1):
             rows.append({
@@ -122,9 +133,11 @@ def main() -> None:
         top1 = sum(1 for r in ranks if r == 1)
         top5 = sum(1 for r in ranks if r and r <= 5)
         mrr = sum((1.0 / r) for r in ranks if r) / len(ranks)
+        doc_top5 = sum(1 for r in doc_ranks if r and r <= 5)
         summary.update({
             "top1_accuracy": round(top1 / len(ranks), 3),
             "top5_recall": round(top5 / len(ranks), 3),
+            "doc_top5_recall": round(doc_top5 / len(doc_ranks), 3) if doc_ranks else None,
             "mrr": round(mrr, 3),
             "gate2_pass": (top5 / len(ranks)) >= 0.8,
         })
