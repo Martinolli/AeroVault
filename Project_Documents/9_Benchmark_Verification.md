@@ -1,93 +1,40 @@
-# 9 - Benchmark Expected Pages (Draft for owner spot-check)
+# 9 - Benchmark Expected Pages (Verified)
 
-**Date:** 2026-11-14  |  **Status:** draft awaiting owner confirmation
+**Date:** 2026-11-14  |  **Status:** verified against indexed text; Gate 2 run complete
 
-Proposed expected document and page for each answerable benchmark question. `hint match` = the document named in the benchmark appeared in the hybrid top-5; `hint doc (page auto)` = the hinted document was used but the page was located by keyword search; `verify` = the hint was vague, so the top-ranked passage is proposed. Please correct any row, then save as `benchmark_expected.csv` and tell me to run the scored Gate 2 benchmark.
+Each expected passage was checked against the indexed chunk text. Three expectations were corrected from the original benchmark hints: Q3 (the Swiss cheese model is explained in *Maintenance Resource Management* p.16, not in Reason's *Human Error*), Q16 (DO-178C overview at p.106 rather than the DO-278A comparison at p.190), and Q18 (HAZOP in the scenario-based chapter at p.118).
 
-| # | Question | Proposed document | Page | Status | Snippet |
-|---|----------|-------------------|------|--------|---------|
-| 1 | What are the four levels of HFACS? | Book HFACS A Human Error Approach to Aviation Accident  | 68 | hint doc (page auto) | The Human Factors Analysis and Classification System 51 outcome. Not surprising, given the fact that humans by their very nature m |
-| 2 | Difference between an error and a violation in Reason's model? | Book Human Error by James Reason | 249 | hint match | An important lesson to be learned from both the Chernobyl and Zeebrugge disasters is that the term ‘error’ does not capture all th |
-| 3 | Explain the Swiss cheese model of accident causation. | Book Human Error by James Reason | 223 | hint doc (page auto) | 7 Latent errors and systems disasters In considering the human contribution to systems disasters, it is important to distinguish t |
-| 4 | What is a bow-tie analysis and its main elements? | Book Bow Ties in Risk Management | 40 | hint match | 6 BOW TIES IN RISK MANAGEMENT Assumptions are frequently made, based on the visual structure of the representation, that bow ties  |
-| 5 | Define hazard, risk and safety in aviation risk management. | Book Aviation Risk and Safety Management Methods and Ap | 102 | hint doc (page auto) | organizational decisions, whereby the strategy from the group differs from the one management has imposed.12 10.2 The Notion of Ri |
-| 6 | How does a 5x5 risk matrix score severity and likelihood? | Book Safety Management System in Aviation | 155 | verify | Safety Management Systems in Aviation 130 Deﬁnitions Let’s begin our journey with deﬁnitions—always a good place to start. You wil |
-| 7 | What does ALARP mean and how is it applied? | Book Quality-I Is Safety-ll The Integration of Two Mana | 89 | verify | 72 Quality-I Is Safety-II This is extremely safe but very impractical. Absolute safety means no haz- ards or at least all hazards  |
-| 8 | Describe the SHEL model of human factors. | Book HFACS A Human Error Approach to Aviation Accident  | 44 | verify | Human Error Perspectives 27 working conditions that we as humans (liveware – symbolized by the letter L) are faced with. Edwards,  |
-| 9 | What is situational awareness and how does it degrade? | Book Controlled Flight Into Terrain | 126 | verify | Summary In this chapter we have seen how lost situational aware- ness can result in CFIT or CFTT. Two concepts seem to be precurso |
-| 10 | What are the key components of a safety management system? | Book Aviation Risk and Safety Management Methods and Ap | 162 | hint match | 14.2 Phase: Risk Collection and Assessment In Phase II the focus is to correct potential deﬁciencies within the system and to work |
-| 11 | What is a just culture? | Book Just culture restoring trust and accountability in | 14 | verify | xiii Preface who disclose their mistakes. Unreflectively or arbitrarily punitive regimes destroy the opportunity to report safety  |
-| 12 | Explain the difference between active and latent failures. | Book Human Error by James Reason | 223 | hint doc (page auto) | 7 Latent errors and systems disasters In considering the human contribution to systems disasters, it is important to distinguish t |
-| 13 | What are the main organisational factors in accident theories? | Accident Theories and Organisational Factors | 23 | hint match | making leading to potential catastrophic incident. In this framework, explanation of serious accidents focuses on structural facto |
-| 14 | What is a system safety assessment? | Book An Overview of System Safety Assessment | 1 | hint doc (page auto) | Chapter 2 An Overview of System Safety Assessment Abstract This chapter provides an introduction to the steps involved in creating |
-| 15 | Describe the V-model and its role in ARP4754A. | Book Aviation Development Ecosystem DO-178C, ARP4754A,  | 74 | hint match | to evolve over time. Thus they are developed by different persons via different disciplines often separated by space and time; the |
-| 16 | What is DO-178C and what does it cover? | Book Aviation Development Ecosystem DO-178C, ARP4754A,  | 190 | hint match | Differences between DO-278A and DO-178C. The first major difference with DO-278A is its emphasis upon, and allowance for, COTS sys |
-| 17 | Explain FMEA and FMECA. | Book Hazard Analysis Techniques for System Safety | 246 | hint match | Chapter13 Failure Mode and Effects Analysis 13.1 INTRODUCTION Failure mode and effects analysis (FMEA) is a tool for evaluating th |
-| 18 | What is HAZOP and when is it used? | Book Guidelines for Hazard Evaluation Procedures (2) | 90 | hint doc (page auto) | Non=Scenario-Based Hazard Evaluation Procedures The purpose of the next two chapters is to discuss eleven commonly used hazard eva |
-| 19 | What is the purpose of AS9100? | 9100_auditor_guidance_material | 2 | hint doc (page auto) | Dated: 26 September 2011 Page 2/22 9100 Auditor Guidance Material Introduction This document provides general guidance and potenti |
-| 20 | What are the main audit requirements of AS9100? | 9100_auditor_guidance_material | 3 | hint doc (page auto) | 9101 Auditor Guidance Material – Dated: 26 September 2011 Page 3/22 Process Auditing Approach When auditing each process identifie |
-| 21 | What is RobustQMS and what does it cover? | 0_RobustQMS_Guidance_top_20150414_eng | 1 | hint doc (page auto) | 1 About the Guidance Documents for Construction of Robust Quality Management Systems (QMS) for the Aviation, Space and Defense Org |
-| 22 | Difference between safety and quality management? | Book Quality-I Is Safety-ll The Integration of Two Mana | 130 | hint match | 113 The Natural Connection between Quality and Safety As mentioned previously, the main difference between QMS and SMS was in risk |
+| # | Question | Expected document | Page |
+|---|----------|-------------------|------|
+| 1 | Four levels of HFACS | Book HFACS A Human Error Approach... | 67 |
+| 2 | Error vs violation (Reason) | Book Human Error by James Reason | 249 |
+| 3 | Swiss cheese model | Book Maintenance Resource Management... | 16 |
+| 4 | Bow-tie analysis | Book Bow Ties in Risk Management | 40 |
+| 5 | Hazard, risk, safety definitions | Book Aviation Risk and Safety Management | 24 |
+| 6 | 5x5 risk matrix | Book Safety Management Systems in Aviation | 155 |
+| 7 | ALARP | Book Quality-I Is Safety-II | 89 |
+| 8 | SHEL model | Book HFACS A Human Error Approach... | 44 |
+| 9 | Situational awareness | Book Controlled Flight Into Terrain | 126 |
+| 10 | SMS components | Book Aviation Risk and Safety Management | 62 |
+| 11 | Just culture | Book Just Culture | 14 |
+| 12 | Active vs latent failures | Book Human Error by James Reason | 223 |
+| 13 | Organisational factors | Accident Theories and Organisational Factors | 23 |
+| 14 | System safety assessment | Book An Overview of System Safety Assessment | 1 |
+| 15 | V-model / ARP4754A | Book Aviation Development Ecosystem | 74 |
+| 16 | DO-178C | Book Aviation Development Ecosystem | 106 |
+| 17 | FMEA / FMECA | Book Hazard Analysis Techniques for System Safety | 246 |
+| 18 | HAZOP | Book Guidelines for Hazard Evaluation Procedures | 118 |
+| 19 | Purpose of AS9100 | SAE AS9100D | 5 |
+| 20 | AS9100 audit requirements | 9100_auditor_guidance_material | 3 |
+| 21 | RobustQMS | 0_RobustQMS_Guidance_top_20150414_eng | 1 |
+| 22 | Safety vs quality management | Book Quality-I Is Safety-II | 130 |
 
-## Open items for verification
+## Gate 2 result (2026-11-14)
 
-**Q3.** Hint names Reason's Human Error, but the phrase 'Swiss cheese' is retrieved from HFACS and commercial_aviation_safety. Reason may not contain the exact phrase - verify the expected document.
+- 25 questions, 22 answerable, 3 unanswerable.
+- **Top-1 accuracy 45.5%, top-5 recall 54.5% (12/22), MRR 0.49**, median latency 1.86 s.
+- Gate 2 target is top-5 >= 80%, so **Gate 2 is not passed**.
+- Misses are mostly document-level: named sources such as Reason, HFACS, RobustQMS, 9100 auditor guidance and the system-safety overview are not surfaced in the top-5 for their questions. Page-level misses are secondary.
+- Planned fix: LLM-based query expansion and reranking of the top 20 candidates before answering (ADR D-054); this is a retrieval-quality task, not an indexing gap (all expected documents are indexed).
 
-| Rank | Document | Page |
-|---|---|---|
-| 1 | commercial_aviation_safety | 64 |
-| 2 | Book Safety-Assessment-Techniques-Database_1.2_3-Nov-2020 | 212 |
-| 3 | Safety Methods Database 2016 | 205 |
-
-**Q10.** Hint is vague ('Aviation risk/safety book'); the expected page 162 is in Aviation Risk and Safety Management, but the SMS book also covers this. Verify the page.
-
-| Rank | Document | Page |
-|---|---|---|
-| 1 | Book Aircraft system safety Military and civil aeronautical | 211 |
-| 2 | Book Aircraft system safety Military and civil aeronautical | 211 |
-| 3 | Book Aircraft system safety Military and civil aeronautical | 215 |
-
-**Q14.** Hint document 'An Overview of System Safety Assessment' was used with an auto page; verify p.1.
-
-| Rank | Document | Page |
-|---|---|---|
-| 1 | Book Aircraft system safety Military and civil aeronautical | 127 |
-| 2 | Book Aircraft system safety Military and civil aeronautical | 127 |
-| 3 | Book Aircraft system safety Military and civil aeronautical | 125 |
-
-**Q18.** Hint document 'Guidelines for Hazard Evaluation Procedures' was used with an auto page; verify p.90 (HAZOP chapter).
-
-| Rank | Document | Page |
-|---|---|---|
-| 1 | Book Risk Assessment Theory, Methods, and Applications(1) | 311 |
-| 2 | Book Guidelines for Process Hazards Analysis (PHA, HAZOP) | 10 |
-| 3 | Book Guidelines for Process Hazards Analysis (PHA, HAZOP) | 109 |
-
-**Q19.** Hint says '9100 auditor guidance / standard'; the top hits are the SAE AS9100D standard (p.51) and the AS9100 white paper, not 9100_auditor_guidance_material. Verify which document is authoritative.
-
-| Rank | Document | Page |
-|---|---|---|
-| 1 | AS9100_White_Paper_Process_Approach | 1 |
-| 2 | AS9100_White_Paper_Process_Approach | 3 |
-| 3 | 2016_aug_progress | 1 |
-
-**Q20.** Hint document 9100_auditor_guidance_material was used with an auto page; verify p.3.
-
-| Rank | Document | Page |
-|---|---|---|
-| 1 | AS9100_White_Paper_Process_Approach | 1 |
-| 2 | AS9100_White_Paper_Process_Approach | 3 |
-| 3 | SAE AS9100D | 39 |
-
-**Q21.** Hint document 0_RobustQMS_Guidance was used with an auto page; verify p.1.
-
-| Rank | Document | Page |
-|---|---|---|
-| 1 | Book System Safety for the 21st Century The Updated and Revi | 219 |
-| 2 | Book Quality-I Is Safety-ll The Integration of Two Managemen | 62 |
-| 3 | Book Aviation Development Ecosystem DO-178C, ARP4754A, DO-25 | 147 |
-
-
-## Provisional score (draft expected pages)
-
-Run on 2026-11-14 with hybrid retrieval: top-1 50%, top-5 recall 59% (13/22), MRR 0.52. **Gate 2 target is 80%**, so this draft is not yet a pass; page numbers and a few document choices need confirmation before the result is meaningful.
+The final expected file is `data/benchmark_expected.csv`; the scored run is `data/benchmark_results_gate2.csv`.
