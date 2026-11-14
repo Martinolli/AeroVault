@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import os
+import sys
 
 MIN_TEXT_CHARS = 50
+_OCR_WARNED = False
 
 
 @dataclass
@@ -15,17 +18,36 @@ class PageText:
     ocr_used: bool = False
 
 
+def _tesseract_cmd() -> str:
+    cmd = os.environ.get("AEROVAULT_TESSERACT_CMD", "")
+    if cmd:
+        return cmd
+    default = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    return default if os.path.exists(default) else "tesseract"
+
+
 def _ocr_fitz_page(page) -> str:
+    """Render the page and OCR it. Scanned pages often have a dark frame and
+    grey background that make full-page segmentation return nothing, so the
+    margins are cropped and contrast normalised before OCR."""
+    global _OCR_WARNED
     try:
         import io
 
         import pytesseract
-        from PIL import Image
+        from PIL import Image, ImageOps
 
+        pytesseract.pytesseract.tesseract_cmd = _tesseract_cmd()
         pix = page.get_pixmap(dpi=300)
-        image = Image.open(io.BytesIO(pix.tobytes("png")))
-        return pytesseract.image_to_string(image)
-    except Exception:
+        image = Image.open(io.BytesIO(pix.tobytes("png"))).convert("L")
+        w, h = image.size
+        image = image.crop((int(w * 0.06), int(h * 0.06), int(w * 0.94), int(h * 0.94)))
+        image = ImageOps.autocontrast(image)
+        return pytesseract.image_to_string(image, config="--psm 6")
+    except Exception as exc:  # noqa: BLE001
+        if not _OCR_WARNED:
+            print(f"OCR warning: {type(exc).__name__}: {exc}", file=sys.stderr)
+            _OCR_WARNED = True
         return ""
 
 

@@ -7,11 +7,12 @@
 #   .\scripts\ingest.ps1 ingest -NoVectors
 #   .\scripts\ingest.ps1 ingest -Limit 20
 #   .\scripts\ingest.ps1 vectors-only
+#   .\scripts\ingest.ps1 ocr
 #   .\scripts\ingest.ps1 status
 
 param(
     [Parameter(Position = 0)]
-    [ValidateSet('scan', 'ingest', 'vectors-only', 'status')]
+    [ValidateSet('scan', 'ingest', 'vectors-only', 'ocr', 'status')]
     [string]$Command = 'scan',
     [int]$Limit = 0,
     [string]$Collection = '',

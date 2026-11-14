@@ -106,8 +106,16 @@ def cmd_ingest(args: argparse.Namespace, conn) -> None:
     root = Path(args.root)
     lance_dir = Path(args.lance)
     passwords = _load_passwords(Path(args.db).parent)
-    where = "status IN ('pending', 'partial')" if not args.force else "1 = 1"
-    docs = _select_docs(conn, args, where, " ORDER BY size_mb ASC")
+    if getattr(args, "only_ocr", False):
+        where = "status = 'text_only' AND pages > 0"
+        order = (
+            " ORDER BY CASE collection WHEN 'Aviation HF' THEN 0 "
+            "WHEN 'Quality ISO SAE' THEN 1 ELSE 2 END, pages ASC"
+        )
+    else:
+        where = "status IN ('pending', 'partial')" if not args.force else "1 = 1"
+        order = " ORDER BY size_mb ASC"
+    docs = _select_docs(conn, args, where, order)
     if not docs:
         print("Nothing to ingest.")
         return
@@ -136,6 +144,11 @@ def cmd_ingest(args: argparse.Namespace, conn) -> None:
         status = "indexed" if text_pages >= 0.9 * max(len(pages), 1) else "partial"
         if not use_vectors:
             status = "text_only"
+        if getattr(args, "only_ocr", False) and text_pages == 0:
+            set_status(conn, doc["id"], "error", error="OCR produced no text", pages=len(pages))
+            conn.commit()
+            print(f"OCR EMPTY {doc['rel_path']}")
+            continue
 
         reset_document(conn, doc["id"])
         save_pages(conn, doc["id"], pages)
@@ -167,6 +180,14 @@ def cmd_ingest(args: argparse.Namespace, conn) -> None:
         )
 
     print(json.dumps(stats(conn), indent=2))
+
+
+def cmd_ocr(args: argparse.Namespace, conn) -> None:
+    """OCR documents that have no text layer (status text_only, pages > 0)."""
+    args.only_ocr = True
+    args.ocr = True
+    args.force = False
+    cmd_ingest(args, conn)
 
 
 def cmd_vectors_only(args: argparse.Namespace, conn) -> None:
@@ -214,6 +235,13 @@ def main(argv: list[str] | None = None) -> None:
     p_ingest.add_argument("--no-vectors", action="store_true")
     p_ingest.add_argument("--force", action="store_true")
     p_ingest.set_defaults(func=cmd_ingest)
+
+    p_ocr = sub.add_parser("ocr")
+    p_ocr.add_argument("--limit", type=int, default=0)
+    p_ocr.add_argument("--collection", default=None)
+    p_ocr.add_argument("--path-substring", default=None)
+    p_ocr.add_argument("--no-vectors", action="store_true")
+    p_ocr.set_defaults(func=cmd_ocr)
 
     p_vec = sub.add_parser("vectors-only")
     p_vec.add_argument("--limit", type=int, default=0)
