@@ -17,9 +17,13 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     chat_model: str = "gpt-4o-mini"
     embedding_model: str = "text-embedding-3-small"
+    session_hours: int = 8
+    remember_days: int = 30
     cors_origins: list[str] = [
         "http://127.0.0.1:5173",
         "http://localhost:5173",
+        "http://127.0.0.1:5273",
+        "http://localhost:5273",
     ]
 
 

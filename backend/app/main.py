@@ -1,8 +1,9 @@
-"""AeroVault API — Phase 1 scaffold."""
+"""AeroVault API — Phase 3: auth + library browsing."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api import router
 from app.config import settings
 
 app = FastAPI(
@@ -18,6 +19,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(router)
 
 
 @app.get("/api/health")

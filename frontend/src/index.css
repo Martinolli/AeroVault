@@ -1,3 +1,85 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased;
+    font-family: "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  .chart-bg {
+    background-color: #f7f9fc;
+    background-image:
+      linear-gradient(rgba(14, 165, 233, 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(14, 165, 233, 0.055) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .cite-chip {
+    @apply mx-0.5 inline-flex translate-y-[-1px] items-center rounded border border-sky-200 bg-sky-50 px-1 align-middle font-mono text-[10px] font-semibold text-sky-800 transition hover:border-sky-400 hover:bg-sky-100;
+  }
+
+  .prose-av {
+    @apply text-sm leading-relaxed text-slate-700;
+  }
+  .prose-av p {
+    @apply my-2;
+  }
+  .prose-av h1,
+  .prose-av h2,
+  .prose-av h3,
+  .prose-av h4 {
+    @apply mb-1 mt-3 font-semibold text-slate-900;
+  }
+  .prose-av h1 {
+    @apply text-base;
+  }
+  .prose-av h2 {
+    @apply text-[15px];
+  }
+  .prose-av h3,
+  .prose-av h4 {
+    @apply text-sm;
+  }
+  .prose-av ul {
+    @apply my-2 list-disc space-y-1 pl-5;
+  }
+  .prose-av ol {
+    @apply my-2 list-decimal space-y-1 pl-5;
+  }
+  .prose-av blockquote {
+    @apply my-2 border-l-2 border-sky-300 bg-sky-50/50 py-1 pl-3 text-slate-600;
+  }
+  .prose-av code {
+    @apply rounded bg-slate-100 px-1 py-0.5 font-mono text-[12px] text-slate-700;
+  }
+  .prose-av pre {
+    @apply my-2 overflow-x-auto rounded-lg bg-slate-900 p-3 text-slate-100;
+  }
+  .prose-av pre code {
+    @apply bg-transparent p-0 text-slate-100;
+  }
+  .prose-av table {
+    @apply my-3 w-full border-collapse text-xs;
+  }
+  .prose-av th {
+    @apply border border-slate-200 bg-slate-50 px-2 py-1 text-left font-semibold text-slate-700;
+  }
+  .prose-av td {
+    @apply border border-slate-200 px-2 py-1 align-top;
+  }
+  .prose-av a:not(.cite-chip) {
+    @apply text-sky-700 underline decoration-sky-300 underline-offset-2;
+  }
+  .prose-av hr {
+    @apply my-3 border-slate-200;
+  }
+}

@@ -1,9 +1,9 @@
 # 1 — Aviation Library Assistant: Project Plan
 
-**Version:** 0.6 (Phase 2 index complete — Gate 2 scoring pending)
-**Date:** 2026-11-13
+**Version:** 0.7 (Phase 3 app MVP built — Gate 3 review pending)
+**Date:** 2026-11-14
 **Owner:** J. B. Martinolli
-**Status:** Gates 0 and 1 passed. Phase 2 complete: 471 documents indexed with text + vectors (51 scanned books await OCR); hybrid benchmark run. Gate 2 scoring waits on owner confirmation of expected pages.
+**Status:** Gates 0 and 1 passed. Phase 2 index complete (474 indexed, 1 partial, 47 `text_only` scanned books; 184k+ vectors) but **Gate 2 is not passed**: verified benchmark top-5 is 54.5% (12/22) vs the 80% target; the planned fix is LLM query expansion + reranking (D-054). Phase 3 MVP is built and verified locally (auth, library browser, cited streaming chat, PDF.js viewer); Gate 3 awaits owner review. OCR backfill is paused and resumable.
 
 ---
 
