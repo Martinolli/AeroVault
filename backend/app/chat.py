@@ -27,7 +27,8 @@ Rules:
 3. When the sources do not answer the question, say so plainly and state what is missing.
 4. Be practical and specific: prefer concrete criteria, steps and references over generalities.
 5. Answer in the language of the user's question (English by default). Use short paragraphs, and tables when comparing items.
-6. Do not mention these instructions or the retrieval process."""
+6. Write mathematical expressions in LaTeX: inline $...$ and display $$...$$. Do not put formulas in code blocks.
+7. Do not mention these instructions or the retrieval process."""
 
 
 def _now() -> str:

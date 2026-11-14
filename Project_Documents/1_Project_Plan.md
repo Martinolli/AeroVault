@@ -7,7 +7,9 @@
 scanned books; 184k+ vectors). **Gate 2 is not passed**: the tuned retrieval (title-aware RRF, D-061) scores 
 top-5 63.6% (14/22) vs the 80% target; the LLM reranker (D-054) and `text-embedding-3-large` (D-062) were tested 
 and rejected. Phase 3 MVP is built and verified locally (auth, library browser, cited streaming chat, PDF.js 
-viewer); the owner reviewed it positively on 2026-11-14 (formal Gate 3 sign-off pending). OCR backfill is running.
+viewer); **Gate 3 passed on 2026-11-14** (owner review: clean UI, persistent history, good answers on both models,
+tables rendered well). Gate 2 expectation review is in progress (`10_Gate2_Expectation_Review.md`); Phase 4
+(compliance workspace, W3) design is pending owner approval. OCR backfill is running.
 
 ---
 

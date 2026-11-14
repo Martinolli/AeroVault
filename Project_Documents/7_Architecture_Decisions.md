@@ -82,6 +82,14 @@ The owner approved the architecture and all recommendations. Resolutions: light 
 | D-062 | Do **not** migrate the corpus to `text-embedding-3-large`: pilot on 7,814 chunks from the 17 expected documents ranked the expected page in the top-5 for 16/22 questions vs 18/22 with `-small` | A full re-embed (~184k chunks) costs money and hours with no measured page-level gain; `-small` stays (D-036) | Rejected — keep `-small` |
 | D-063 | OCR backfill resumed after the owner approved running it in parallel with retrieval work; it processes Aviation HF → Quality → Aircraft Theory and commits per document | `text_only` dropped from 47 to 22 while running; remaining books are mostly Aircraft Theory | Running — resumable |
 
+## 9. Phase 4 decisions (2026-11-14)
+
+| ID | Decision | Rationale | Status |
+|----|----------|-----------|--------|
+| D-064 | Gate 3 is marked **passed** on the owner's review (clean UI, persistent history, comprehensive answers on both models, tables render well) | Owner explicitly accepted the MVP on 2026-11-14 | Passed |
+| D-065 | Chat answers render LaTeX with `remark-math` + `rehype-katex`; the system prompt asks for `$...$` inline and `$$...$$` display math | Aeronautics and dynamics books are formula-heavy; KaTeX is client-side and safe (no raw HTML) | Implemented |
+| D-066 | Compliance workspace (W3) scope confirmed by owner: input PDF + DOCX; output DOCX + XLSX; clause-level matching against selected indexed standards; uploads are transient and are **not** stored or embedded | Owner wants a practical gap-check tool without polluting the library index; clause-level gives actionable results | Design drafted — approval pending |
+
 ## 8. Phase 3 implementation decisions (2026-11-14)
 
 | ID | Decision | Rationale | Status |
