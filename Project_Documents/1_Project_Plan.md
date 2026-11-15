@@ -1,16 +1,18 @@
 # 1 — Aviation Library Assistant: Project Plan
 
-**Version:** 0.7 (Phase 3 app MVP built — Gate 3 review pending)
-**Date:** 2026-11-14
+**Version:** 0.8 (Phase 4 flexibility strategy under owner review)
+**Date:** 2026-11-15
 **Owner:** J. B. Martinolli
-**Status:** Gates 0 and 1 passed. Phase 2 index complete (498 indexed, 2 partial, 22 `text_only` 
-scanned books; 184k+ vectors). **Gate 2 is not passed**: the tuned retrieval (title-aware RRF, D-061) scores 
-top-5 63.6% (14/22) vs the 80% target; the LLM reranker (D-054) and `text-embedding-3-large` (D-062) were tested 
-and rejected. Phase 3 MVP is built and verified locally (auth, library browser, cited streaming chat, PDF.js 
-viewer); **Gate 3 passed on 2026-11-14** (owner review: clean UI, persistent history, good answers on both models,
-tables rendered well). Gate 2 expectation review is in progress (`10_Gate2_Expectation_Review.md`); Phase 4
+**Status:** Gates 0 and 1 passed. Phase 2 index is nearly complete (519 indexed, 2 partial, 1 `text_only`;
+184k+ vectors). **Gate 2 is not passed**: the tuned retrieval (title-aware RRF, D-061) scores top-5 63.6%
+(14/22) vs the 80% target; the owner reviewed the eight misses on 2026-11-15 and kept the current expected
+pages, so no expectation changes were made. The LLM reranker (D-054) and `text-embedding-3-large` (D-062)
+were tested and rejected. Phase 3 MVP is built and verified locally; **Gate 3 passed on 2026-11-14**. Phase 4
 (compliance workspace, W3) MVP is built: PDF/DOCX upload, clause-level comparison against standards named per
-request, DOCX/XLSX export; Gate 4 UAT pending. OCR backfill is running.
+request, DOCX/XLSX export. The owner now wants a more flexible workflow: document-versus-SMS-framework gap and
+improvement reviews, and problem-driven analysis of a procedure against an applicable standard; FAA and EASA
+material is the next library expansion. Strategy is in `12_Flexible_Compliance_and_Regulatory_Expansion.md`
+(awaiting owner decisions). Gate 4 UAT pending.
 
 ---
 

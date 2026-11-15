@@ -1,6 +1,8 @@
 # 10 — Gate 2 Expectation Review
 
-**Date:** 2026-11-14  |  **Status:** awaiting owner confirmation
+**Date:** 2026-11-14 (updated 2026-11-15)  |  **Status:** owner confirmed — keep current expected pages
+
+**Owner decision (2026-11-15):** keep the current expected page for all eight questions. Candidate pages are not adopted, so the tuned benchmark remains **63.6% top-5 (14/22)** and Gate 2 remains open.
 
 The tuned retrieval scores **63.6% top-5 (14/22)**. The eight questions below still miss.
 For each, the current expected page is shown, followed by the pages retrieved from the expected

@@ -2,6 +2,8 @@
 
 **Date:** 2026-11-14 (updated 2026-11-15)  |  **Status:** implemented MVP 2026-11-15  |  **Decision:** D-066
 
+**Next extension:** the owner requested flexible gap/improvement and problem-driven modes plus FAA/EASA expansion; see `12_Flexible_Compliance_and_Regulatory_Expansion.md` (proposed, pending decisions).
+
 ## 1. Purpose
 
 Let the owner upload an internal procedure and compare it, clause by clause, against one or more indexed standards (for example AS9100D, ISO 9001 or an ISO/SAE guidance document). The output is an evidence-based compliance matrix with a clear status, the supporting standard clause and page, and a recommended action. It is a decision-support aid, not a certification.
