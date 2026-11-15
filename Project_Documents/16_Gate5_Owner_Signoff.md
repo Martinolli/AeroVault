@@ -1,10 +1,10 @@
 # Gate 5 — Owner Acceptance Sign-off
 
-**Status:** SIGNED — owner acceptance recorded 2026-11-15; OneDrive migration verified; empty legacy folder cleanup pending
+**Status:** SIGNED — all Gate 5 handover items complete 2026-11-15; OneDrive migration, key rotation and UI smoke test verified
 **Project:** AeroVault
 **Owner:** J. B. Martinolli
 **Security review:** `15_Gate5_Security_Review.md`, dated 2026-11-15
-**Security result:** PASS — no open Critical or High findings after remediation. Overall Gate 5 is signed subject to completion of the OneDrive migration recorded below.
+**Security result:** PASS — no open Critical or High findings after remediation. Overall Gate 5 is signed and complete; the residual risks below remain accepted.
 
 ## 1. Purpose
 
@@ -20,7 +20,7 @@ This document records the owner's acceptance of the residual Medium and Low risk
 | Non-root containers | Accept for the current single-owner localhost deployment; schedule hardening before LAN or long-term multi-user use. | [x] Accept / [ ] Remediate now |
 | Remaining Low items | Accept for the current threat model and revisit before LAN, multi-user or hosted use. | [x] Accept all / [ ] Specify exceptions |
 
-**Owner's recorded instructions:** move the project to `C:\Users\Aspire5 15 i7 4G2050\AeroVault`; keep the library under OneDrive; the owner will generate a new OpenAI API key after the changes; commit and push the reviewed work.
+**Owner's recorded instructions:** move the project to `C:\Users\Aspire5 15 i7 4G2050\AeroVault`; keep the library under OneDrive; generate a new OpenAI API key, confirm it works and revoke the old key; commit and push the reviewed work.
 
 ## 3. Residual risk acceptance
 
@@ -62,7 +62,7 @@ The approved migration sequence is:
 5. Confirm `.env` and `data/aerovault.db` no longer have the OneDrive `ReparsePoint` attribute.
 6. Remove the old OneDrive copy contents only after verification; remove the empty legacy folder once Windows releases its lock.
 7. Update hard-coded project paths in `README.md`, the project documents and the installed skill references.
-8. The owner will generate and install a new OpenAI API key after the changes, because the old key may already have been uploaded to OneDrive.
+8. The owner generated and installed a new OpenAI API key after the changes, confirmed it works, and revoked the old key because it may already have been uploaded to OneDrive.
 
 If Option B had been selected, the owner would have accepted that the API key and work data may leave the PC through OneDrive, and would still rotate the key if it had already synced. Option A is selected instead.
 
@@ -110,13 +110,14 @@ This section records the verification completed after the project was copied to 
 | Backend health | `/api/health` returned `{"status":"ok","app":"AeroVault","version":"0.1.0","env":"dev"}` from the new path | Pass |
 | Protected API boundary | `/api/chats` returned 401 without a session; `/api/auth/me` returned `{"authenticated":false}` | Pass |
 | Container mounts | Backend data mount resolves to `C:\Users\Aspire5 15 i7 4G2050\AeroVault\data`; library remains read-only from OneDrive | Pass |
-| Login, citation and export smoke tests | Owner UI login, one citation and one export still need a final owner check | Pending owner smoke |
-| Old OneDrive copy contents removed | All 30,860 files removed after target verification; the empty legacy folder remains because Windows reports a lock (0 items, no secrets) | Pass for data removal; empty folder cleanup pending |
+| Login, citation and export smoke tests | Owner confirmed login, one citation and one export passed on 2026-11-15 | Pass |
+| OpenAI key rotation | Owner generated a new key, recreated the backend, confirmed a real request works, and revoked the old key | Pass |
+| Old OneDrive project removed | Owner deleted the old AeroVault folder from OneDrive online; the local legacy path has 0 items and no secrets/data | Pass |
 | Path references updated | README, project plan, step log, ADR and installed skill updated to the new root | Pass |
 | OneDrive resumed | OneDrive process restarted after the copy | Pass |
 
-The legacy empty folder can be deleted after closing any Explorer/editor window that still references it or after the next Windows restart. It contains no `.env`, database, index, chat or compliance data.
+The local legacy path is an empty placeholder with no `.env`, database, index, chat or compliance data; the OneDrive online copy has been deleted. It is not a security exposure.
 
 ## 8. Reviewer note
 
-This document records the owner's typed acceptance from the Manus task; it is not a handwritten signature. The technical evidence remains in `15_Gate5_Security_Review.md`. The reviewed local commit before migration was `213660c` (Gate 5 security review and remediations). The migration and documentation updates are committed separately so the security-review commit remains identifiable.
+This document records the owner's typed acceptance from the Manus task; it is not a handwritten signature. The technical evidence remains in `15_Gate5_Security_Review.md`. The reviewed local commit before migration was `213660c` (Gate 5 security review and remediations). The owner confirmed the final key rotation and UI smoke test on 2026-11-15; all handover items are complete.

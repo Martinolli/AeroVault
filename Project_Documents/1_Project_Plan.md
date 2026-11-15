@@ -136,7 +136,7 @@ the library or embedded. Run history is metadata only (90 days, deletable).
 
 - Password hashed with Argon2id; HttpOnly + SameSite=Strict session cookies; login throttling (5 failures / 15 minutes); CSRF risk reduced by SameSite and the explicit CORS allow-list.
 - Server binds to `127.0.0.1` by default; LAN mode is an explicit opt-in.
-- API keys stored in `.env` or Windows Credential Manager; never committed to git. The project and `.env` now live at `C:\Users\Aspire5 15 i7 4G2050\AeroVault`, outside OneDrive; the owner will rotate the old key because it may have synced previously.
+- API keys stored in `.env` or Windows Credential Manager; never committed to git. The project and `.env` now live at `C:\Users\Aspire5 15 i7 4G2050\AeroVault`, outside OneDrive. The owner generated a new OpenAI key on 2026-11-15, confirmed it works and revoked the old key.
 - Query logs stay local; export and clear options available.
 - Source library is read-only except for approved renames (dry-run list shown and confirmed before any change).
 - Copyright: private use only; no redistribution of book content; exports contain short quotes with citations.

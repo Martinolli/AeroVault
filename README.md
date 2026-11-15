@@ -57,8 +57,8 @@ Both host ports are bound to `127.0.0.1` only; nothing is exposed to the network
 
 **Secret storage:** `.env` contains the billable OpenAI key and is gitignored. The project now lives at
 `C:\Users\Aspire5 15 i7 4G2050\AeroVault`, outside OneDrive; `.env` and `data/aerovault.db` are normal local files,
-not OneDrive reparse points. The read-only library remains under OneDrive. The owner will rotate the OpenAI key
-because the previous key may already have been cloud-synced. The decision and migration evidence are recorded in
+not OneDrive reparse points. The read-only library remains under OneDrive. The owner rotated the OpenAI key on
+2026-11-15, confirmed the new key works and revoked the previous key. The decision and migration evidence are recorded in
 `Project_Documents/16_Gate5_Owner_Signoff.md`.
 
 ## Compliance workspace
