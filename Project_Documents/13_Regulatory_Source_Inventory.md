@@ -1,6 +1,6 @@
 # 13 — Regulatory Source Inventory and Ingestion Options
 
-**Date:** 2026-11-15  |  **Status:** inventory complete — Option A approved; fetcher implemented, core pack pending  |  **Related:** 12_Flexible_Compliance_and_Regulatory_Expansion.md
+**Date:** 2026-11-15  |  **Status:** inventory complete — Option A approved; FAA core pack downloaded/indexed, EASA pending  |  **Related:** 12_Flexible_Compliance_and_Regulatory_Expansion.md
 
 ## 1. Summary
 
@@ -115,12 +115,24 @@ The manifest currently contains:
 
 | Source | Form | Status |
 |---|---|---|
-| 14 CFR Parts 5, 91, 121, 135 | Official eCFR XML API, issue date 2026-11-12 | Part 5 downloaded/checksummed/indexed text-only; Parts 91/121/135 planned |
-| AC 120-92D | Official FAA PDF | Planned |
-| AC 21-58 | Official FAA PDF | Downloaded, checksummed and indexed text-only (62 pp; 1,114,657 bytes) |
+| 14 CFR Part 5 | Official eCFR XML API, issue date 2026-11-12 | Downloaded/checksummed/indexed and vectorised (36,208 bytes; 9 chunks) |
+| 14 CFR Part 91 | Official eCFR XML API, issue date 2026-11-12 | Downloaded/checksummed/indexed and vectorised (810,749 bytes; 234 chunks) |
+| 14 CFR Part 121 | Official eCFR XML API, issue date 2026-11-12 | Downloaded/checksummed/indexed and vectorised (1,199,683 bytes; 338 chunks) |
+| 14 CFR Part 135 | Official eCFR XML API, issue date 2026-11-12 | Downloaded/checksummed/indexed and vectorised (674,038 bytes; 202 chunks) |
+| AC 120-92D | Official FAA PDF | Downloaded/checksummed/indexed and vectorised (2,329,349 bytes; 148 pp; 179 chunks) |
+| AC 21-58 | Official FAA PDF | Downloaded/checksummed/indexed and vectorised (1,114,657 bytes; 62 pp; 65 chunks) |
 | EASA Easy Access Rules for Air Operations Rev 24 | Official EASA landing page; PDF/XML links | Planned |
 
 The fetcher accepts HTTPS only, records SHA-256, bytes, content type, fetch time and status, refuses to overwrite
 unless `--force` is supplied, and writes eCFR `.txt` companions. It does not automatically index downloads. The
 EASA landing page is used because direct PDF/XML links are generated on the official page and may change; add the
 direct URL after downloading. EASA and ICAO material may be copyrighted and must not be redistributed.
+
+The FAA collection now contains six indexed documents and 1,027 chunks, all with vectors. The overall library
+index is 528 documents / 206,628 chunks; 527 documents have vectors. Retrieval checks against AC 120-92D returned
+the expected Safety Risk Management worksheet passages on pages 102–103, and AC 21-58 returned its SRM and
+corrective-action passages. A live `gpt-4o-mini` problem run on Part 5 completed with 12 FAA citations.
+
+**Citation limitation:** eCFR parts are ingested as one continuous `.txt` file, so their chunk/page number is 1.
+Use the section number in the quoted text for regulatory citation until section-level mapping is implemented. The
+problem-mode validator now rejects unsupported pages and shows page 0 rather than guessing.

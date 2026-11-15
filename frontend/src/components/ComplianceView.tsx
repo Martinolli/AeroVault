@@ -656,7 +656,7 @@ export default function ComplianceView({ onOpenSource }: Props) {
                             <td className="max-w-[220px] px-3 py-2 text-slate-600">
                               <div className="truncate">{r.document || "—"}</div>
                               <div className="text-[11px] text-slate-400">{r.authority} {r.clause ? `· ${r.clause}` : ""}</div>
-                              {r.document && r.document_id ? <button type="button" onClick={() => onOpenSource({ documentId: r.document_id as number, title: r.document, page: r.page, excerpt: r.evidence })} className="mt-1 text-[11px] font-medium text-sky-700 hover:underline">Open p.{r.page}</button> : r.document ? <div className="mt-1 text-[11px] text-slate-400">Cited p.{r.page}</div> : null}
+                              {r.document && r.document_id && r.page > 0 ? <button type="button" onClick={() => onOpenSource({ documentId: r.document_id as number, title: r.document, page: r.page, excerpt: r.evidence })} className="mt-1 text-[11px] font-medium text-sky-700 hover:underline">Open p.{r.page}</button> : r.document ? <div className="mt-1 text-[11px] text-slate-400">{r.page > 0 ? `Cited p.${r.page}` : r.citation_verified === false ? "Page not verified" : "Page unavailable"}</div> : null}
                             </td>
                             <td className="max-w-[280px] px-3 py-2 italic text-slate-500">{r.evidence || "—"}</td>
                             <td className="max-w-[220px] px-3 py-2 text-slate-600">{r.relevance || "—"}</td>

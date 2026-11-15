@@ -3,15 +3,16 @@
 **Version:** 1.0 (problem-driven compliance, metadata history, regulatory fetcher)
 **Date:** 2026-11-15
 **Owner:** J. B. Martinolli
-**Status:** Gates 0 and 1 passed. Phase 2 index is nearly complete (519 indexed, 2 partial, 1 `text_only`;
-184k+ vectors). **Gate 2 is not passed**: the tuned retrieval (title-aware RRF, D-061) scores top-5 63.6%
+**Status:** Gates 0 and 1 passed. Phase 2 index is nearly complete (525 indexed, 2 partial, 1 `text_only`;
+206,628 chunks; 527 documents with vectors). **Gate 2 is not passed**: the tuned retrieval (title-aware RRF, D-061) scores top-5 63.6%
 (14/22) vs the 80% target; the owner reviewed the eight misses on 2026-11-15 and kept the current expected
 pages, so no expectation changes were made. The LLM reranker (D-054) and `text-embedding-3-large` (D-062)
 were tested and rejected. Phase 3 MVP is built and verified locally; **Gate 3 passed on 2026-11-14**. Phase 4
 (compliance workspace, W3) is implemented beyond the original clause matrix: PDF/DOCX upload, indexed-library
 document input, **problem-driven analysis first**, improvement reviews, the original clause-level gap review,
-authority/source scoping, metadata-only run history and DOCX/XLSX export. The official-source fetcher and
-FAA/EASA core-pack manifest are in place; the core pack still needs to be downloaded, reviewed and indexed.
+authority/source scoping, metadata-only run history and DOCX/XLSX export. The official-source fetcher is in
+place and the FAA half of the core pack is downloaded, checksummed, indexed and vectorised: 14 CFR Parts 5, 91,
+121 and 135 plus AC 120-92D and AC 21-58 (six documents, 1,027 chunks). EASA Easy Access Rules remain pending.
 **FAA and EASA are the primary reference sources**; ICAO, GCAA, AQAP and NASA are secondary. The regulatory
 inventory is in `13_Regulatory_Source_Inventory.md`; strategy is in `12_Flexible_Compliance_and_Regulatory_Expansion.md`.
 The owner approved Option A (focused FAA/EASA core pack) and problem-driven analysis first. Gate 4 UAT is pending.
@@ -211,6 +212,7 @@ the library or embedded. Run history is metadata only (90 days, deletable).
 ## 17. Immediate next steps
 
 1. Owner runs Gate 4 UAT on the problem-driven workflow: one real problem brief with an uploaded procedure, one with an indexed document, one improvement review and one gap review; verify citations and both exports.
-2. Build the FAA/EASA Option A core pack: run the manifest dry-run, fetch the official FAA parts/ACs, obtain the EASA EAR PDF/XML from the official page, record versions/checksums and ingest deliberately.
-3. Add a small source register/revision view and test retrieval against known FAA/EASA clauses before relying on the new pack.
+2. Complete the FAA/EASA Option A core pack: the six FAA documents are downloaded, checksummed, indexed and vectorised; obtain the EASA EAR PDF/XML from the official page, record its version/checksum and ingest it deliberately.
+3. Add a small source register/revision view. Retrieval has been tested against known FAA clauses; eCFR text sources still cite page 1, so section-level citation mapping is the next improvement.
 4. Resume the OCR backfill only when the owner is not using the app; Gate 2 remains open at 63.6% top-5 (14/22) with the owner-confirmed expectations.
+5. Run the live `gpt-4o-mini` problem test after the citation-verification change; the first live run completed with 12 FAA citations and a complete narrative, and the new evidence-to-page validator plus regression test now reject unsupported pages.

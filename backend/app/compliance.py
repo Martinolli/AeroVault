@@ -673,7 +673,108 @@ def _problem_source_excerpt(run: Run) -> str:
     return "\n\n".join(blocks)
 
 
-def _analyse_problem(run: Run, hits: list[Hit]) -> dict:
+_WORD_RE = re.compile(r"[a-z0-9]+")
+
+
+def _norm_words(value: str) -> list[str]:
+    return _WORD_RE.findall((value or "").lower())
+
+
+def _evidence_score(evidence: str, text: str) -> float:
+    """Return a conservative 0–1 score for a quote against a page/chunk.
+
+    The model sometimes attaches the right quote to the wrong page. Exact
+    normalised containment is preferred; a long prefix/suffix and token
+    coverage are fallbacks for PDF extraction differences.
+    """
+    quote = _norm_words(evidence)
+    haystack = _norm_words(text)
+    if not quote or not haystack:
+        return 0.0
+    qtext = " ".join(quote)
+    htext = " ".join(haystack)
+    if qtext in htext:
+        return 1.0
+    for size in (12, 8, 6):
+        if len(quote) >= size:
+            if " ".join(quote[:size]) in htext or " ".join(quote[-size:]) in htext:
+                return 0.88
+    qset = {word for word in quote if len(word) > 2}
+    if not qset:
+        return 0.0
+    return len(qset & set(haystack)) / len(qset)
+
+
+def _verify_problem_citations(conn, narrative: dict, hits: list[Hit], run: Run) -> None:
+    """Correct or reject page numbers that are not supported by the quote."""
+    cache: dict[int, list[tuple[int, str]]] = {}
+
+    def pages_for(document_id: int) -> list[tuple[int, str]]:
+        if document_id not in cache:
+            rows = conn.execute(
+                "SELECT page_no, text FROM pages WHERE document_id = ? ORDER BY page_no",
+                (document_id,),
+            ).fetchall()
+            cache[document_id] = [(int(row["page_no"]), row["text"] or "") for row in rows]
+        return cache[document_id]
+
+    def best_page(document_id: int, evidence: str) -> tuple[int, float]:
+        scored = [(_evidence_score(evidence, text), page) for page, text in pages_for(document_id)]
+        if not scored:
+            return 0, 0.0
+        score, page = max(scored)
+        return (page, score) if score >= 0.72 else (0, score)
+
+    def resolve_document(item: dict) -> int | None:
+        raw = (item.get("document") or "").strip().lower()
+        if not raw:
+            return None
+        match = next((hit for hit in hits if hit.title.lower() == raw), None)
+        if match is None:
+            match = next((hit for hit in hits if raw in hit.title.lower()), None)
+        if match is None:
+            return None
+        item["document"] = match.title
+        item["document_id"] = match.document_id
+        return match.document_id
+
+    unverified = 0
+    for item in narrative.get("applicable_requirements", []):
+        document_id = resolve_document(item)
+        if document_id is None:
+            item["page"] = 0
+            item["citation_verified"] = False
+            unverified += 1
+            continue
+        page, score = best_page(document_id, item.get("evidence", ""))
+        item["page"] = page
+        item["citation_verified"] = bool(page and score >= 0.72)
+        if not item["citation_verified"]:
+            unverified += 1
+
+    # Procedure findings are often inferences, not literal quotes. Verify the
+    # page only when the source text actually supports the stated evidence.
+    source_pages = [(int(page.get("page") or 0), page.get("text") or "") for page in run.source_pages]
+    for item in narrative.get("procedure_evidence", []):
+        evidence = item.get("evidence", "")
+        if not source_pages or not evidence:
+            item["page"] = 0
+            item["citation_verified"] = False
+            continue
+        scored = [(_evidence_score(evidence, text), page) for page, text in source_pages]
+        score, page = max(scored)
+        item["page"] = page if score >= 0.72 else 0
+        item["citation_verified"] = bool(item["page"])
+
+    if unverified:
+        note = (
+            f"{unverified} requirement citation(s) could not be matched to the supplied text; "
+            "their page is shown as 0 rather than guessing."
+        )
+        narrative["limitations"] = (narrative.get("limitations", "") + " " + note).strip()
+
+
+def _analyse_problem(run: Run, hits: list[Hit], conn=None) -> dict:
     base: dict[str, Any] = {
         "problem_understanding": run.problem_brief,
         "applicable_requirements": [],
@@ -790,6 +891,8 @@ def _analyse_problem(run: Run, hits: list[Hit]) -> dict:
         }
         for i, hit in enumerate(hits, start=1)
     ]
+    if conn is not None:
+        _verify_problem_citations(conn, base, hits, run)
     return base
 
 
@@ -811,7 +914,7 @@ def _execute(run: Run) -> None:
                 authorities=[] if run.standards else run.authorities,
                 exclude_doc_id=run.document_id,
             )
-            narrative = _analyse_problem(run, hits)
+            narrative = _analyse_problem(run, hits, conn)
             with _LOCK:
                 run.narrative = narrative
                 run.progress = 1

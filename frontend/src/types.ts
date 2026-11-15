@@ -83,6 +83,7 @@ export type ComplianceNarrative = {
     document_id?: number;
     clause: string;
     page: number;
+    citation_verified?: boolean;
     evidence: string;
     relevance: string;
   }[];
@@ -91,6 +92,7 @@ export type ComplianceNarrative = {
     document: string;
     clause: string;
     page?: number;
+    citation_verified?: boolean;
     evidence: string;
   }[];
   gaps_or_conflicts: {
