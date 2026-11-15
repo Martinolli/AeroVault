@@ -6,7 +6,8 @@ Local, password-protected web app that indexes the aviation library (Aircraft Th
 
 **Phase 5 — hardening and handover.** Login, library browser, cited chat, PDF viewer, the compliance
 workspace and metadata-only run history are implemented. Gate 2 remains open at 63.6% top-5 (14/22) against the
-80% target; Gates 0, 1, 3 and 4 passed, and the Gate 5 security review passed with no open Critical/High findings.
+80% target; Gates 0, 1, 3 and 4 passed. The Gate 5 security review and owner sign-off are complete, with no open
+Critical/High findings; the project was moved outside OneDrive on 2026-11-15.
 The approved core pack is downloaded, checksummed, indexed and vectorised:
 FAA Parts 5/91/121/135, AC 120-92D and AC 21-58 (six documents, 1,027 chunks), plus the EASA Easy Access Rules for
 Air Operations Rev 24 (2,566 pages, 3,038 chunks). The EASA XML archive is retained for future section-level
@@ -32,6 +33,10 @@ AeroVault/
 └─ README.md
 ```
 
+The live project root is `C:\Users\Aspire5 15 i7 4G2050\AeroVault`. The read-only aviation library remains at
+`C:\Users\Aspire5 15 i7 4G2050\OneDrive\Documentos\J_B_Martinolli\DOCUMENTOS REVISION` and is mounted at
+`/library:ro`. Only the library is cloud-backed; `.env`, SQLite and LanceDB now live outside OneDrive.
+
 ## Prerequisites
 
 - Docker Desktop (installed on the target PC)
@@ -50,7 +55,11 @@ docker-compose up --build -d
 
 Both host ports are bound to `127.0.0.1` only; nothing is exposed to the network. Host ports 18000/5273 were chosen because 8000/5173 are used by other local containers. The library is mounted read-only at `/library`.
 
-**Secret storage:** `.env` contains the billable OpenAI key and is gitignored, but this project currently lives under the owner's OneDrive tree. OneDrive is running and `.env`/`data/aerovault.db` are reparse points, so they may be cloud-synced. Before go-live, either move `.env` and `data/` to a local-only path or exclude the folder from OneDrive; rotate the key if it has already synced. The full decision is recorded in `Project_Documents/15_Gate5_Security_Review.md`.
+**Secret storage:** `.env` contains the billable OpenAI key and is gitignored. The project now lives at
+`C:\Users\Aspire5 15 i7 4G2050\AeroVault`, outside OneDrive; `.env` and `data/aerovault.db` are normal local files,
+not OneDrive reparse points. The read-only library remains under OneDrive. The owner will rotate the OpenAI key
+because the previous key may already have been cloud-synced. The decision and migration evidence are recorded in
+`Project_Documents/16_Gate5_Owner_Signoff.md`.
 
 ## Compliance workspace
 
@@ -62,9 +71,9 @@ Uploads are transient and never stored or embedded. Run history is metadata only
 
 ## Ingestion (Phase 2)
 
-**Use the native runner (recommended).** The Docker bind mount to a OneDrive folder is
+**Use the native runner (recommended).** The Docker bind mount to the OneDrive library is
 about 40x slower for file reads (a full scan took 31 s natively vs 20+ min in Docker,
-with no progress). Native ingestion writes to the same `data/` folder the app uses.
+with no progress). Native ingestion writes to the same local `data/` folder the app uses.
 
 ```powershell
 # one-time: install native libs
@@ -79,7 +88,7 @@ py -3 -m pip install --target .work\native_libs pydantic-settings pypdf pymupdf 
 Notes:
 
 - Without API credits the pipeline indexes text only (`text_only` status); `vectors-only` backfills vectors later.
-- The Docker route still works: `docker compose exec backend python -m app.ingest.pipeline ...` but is much slower on OneDrive.
+- The Docker route still works: `docker compose exec backend python -m app.ingest.pipeline ...` but is much slower when reading the OneDrive library.
 - OCR for the 53 scanned documents (D-018), after the first index:
   `.\scripts\ingest.ps1 ingest -Ocr -Force -Collection "Aircraft Theory"` (and the other collections).
 - Ingestion is incremental: unchanged files (same SHA-256) are skipped; changed files are re-indexed.

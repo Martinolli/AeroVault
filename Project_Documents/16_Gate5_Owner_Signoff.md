@@ -1,6 +1,6 @@
 # Gate 5 — Owner Acceptance Sign-off
 
-**Status:** SIGNED — owner acceptance recorded 2026-11-15; OneDrive migration verification in progress
+**Status:** SIGNED — owner acceptance recorded 2026-11-15; OneDrive migration verified; empty legacy folder cleanup pending
 **Project:** AeroVault
 **Owner:** J. B. Martinolli
 **Security review:** `15_Gate5_Security_Review.md`, dated 2026-11-15
@@ -60,7 +60,7 @@ The approved migration sequence is:
 3. Copy the whole `AeroVault` folder to `C:\Users\Aspire5 15 i7 4G2050\AeroVault`; verify before removing the old copy.
 4. Start the stack from the new path and verify health, login, one citation and one export.
 5. Confirm `.env` and `data/aerovault.db` no longer have the OneDrive `ReparsePoint` attribute.
-6. Remove the old OneDrive copy only after verification.
+6. Remove the old OneDrive copy contents only after verification; remove the empty legacy folder once Windows releases its lock.
 7. Update hard-coded project paths in `README.md`, the project documents and the installed skill references.
 8. The owner will generate and install a new OpenAI API key after the changes, because the old key may already have been uploaded to OneDrive.
 
@@ -98,18 +98,24 @@ I, **J. B. Martinolli**, confirm that:
 
 ## 7. Migration verification
 
-This section is completed after the project is copied to the new path and tested.
+This section records the verification completed after the project was copied to the new path and tested.
 
 | Check | Evidence | Result |
 | --- | --- | --- |
-| Target path exists | `C:\Users\Aspire5 15 i7 4G2050\AeroVault` | Pending |
-| Project copied completely | Source and target file counts/sizes compared | Pending |
-| `.env` is not a OneDrive reparse point | File attributes checked at target | Pending |
-| `data/aerovault.db` is not a OneDrive reparse point | File attributes checked at target | Pending |
-| Backend health | `/api/health` from the new path | Pending |
-| Login, citation and export smoke tests | Owner/agent verification | Pending |
-| Old OneDrive copy removed | Only after target verification | Pending |
-| Path references updated | README, project documents and installed skill | Pending |
+| Target path exists | `C:\Users\Aspire5 15 i7 4G2050\AeroVault` | Pass |
+| Project copied completely | 30,860 files and 4,767,140,974 bytes on both source and target; Robocopy reported 0 failed files | Pass |
+| `.env` is not a OneDrive reparse point | Target attributes: `Archive` only; source had `Archive, ReparsePoint` | Pass |
+| `data/aerovault.db` is not a OneDrive reparse point | Target attributes: `Archive` only; source had `Archive, ReparsePoint` | Pass |
+| SQLite data preserved | 529 documents, 209,666 chunks, 177,668 pages; source and target counts identical. `quick_check` reports the same 100 pre-existing never-used pages on both copies; no table/row mismatch | Pass |
+| Backend health | `/api/health` returned `{"status":"ok","app":"AeroVault","version":"0.1.0","env":"dev"}` from the new path | Pass |
+| Protected API boundary | `/api/chats` returned 401 without a session; `/api/auth/me` returned `{"authenticated":false}` | Pass |
+| Container mounts | Backend data mount resolves to `C:\Users\Aspire5 15 i7 4G2050\AeroVault\data`; library remains read-only from OneDrive | Pass |
+| Login, citation and export smoke tests | Owner UI login, one citation and one export still need a final owner check | Pending owner smoke |
+| Old OneDrive copy contents removed | All 30,860 files removed after target verification; the empty legacy folder remains because Windows reports a lock (0 items, no secrets) | Pass for data removal; empty folder cleanup pending |
+| Path references updated | README, project plan, step log, ADR and installed skill updated to the new root | Pass |
+| OneDrive resumed | OneDrive process restarted after the copy | Pass |
+
+The legacy empty folder can be deleted after closing any Explorer/editor window that still references it or after the next Windows restart. It contains no `.env`, database, index, chat or compliance data.
 
 ## 8. Reviewer note
 
