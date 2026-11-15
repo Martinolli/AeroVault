@@ -18,6 +18,10 @@ Operations Rev 24 (2,566 pages, 3,038 chunks). The EASA XML archive is stored fo
 inventory is in `13_Regulatory_Source_Inventory.md`; strategy is in `12_Flexible_Compliance_and_Regulatory_Expansion.md`.
 The owner approved Option A (focused FAA/EASA core pack) and problem-driven analysis first. **Gate 4 passed on
 2026-11-15**: five-scenario UAT, exports, history check and citation-viewer retest all passed after the path fix recorded in S-040.
+**Gate 5 security review passed on 2026-11-15** with no open Critical/High findings: Pillow and Vite High dependency
+findings were fixed and re-audited clean; login throttling, prompt-injection guidance and XLSX formula-injection
+protection were added. The report is `15_Gate5_Security_Review.md`. Overall Gate 5 remains pending owner acceptance
+of the documented Medium/Low items, the OneDrive/ACL decision, backup/restore verification and handover.
 
 ---
 
@@ -129,12 +133,14 @@ the library or embedded. Run history is metadata only (90 days, deletable).
 
 ## 10. Security and privacy
 
-- Password hashed with Argon2id; HttpOnly session cookies; CSRF protection; login throttling.
+- Password hashed with Argon2id; HttpOnly + SameSite=Strict session cookies; login throttling (5 failures / 15 minutes); CSRF risk reduced by SameSite and the explicit CORS allow-list.
 - Server binds to `127.0.0.1` by default; LAN mode is an explicit opt-in.
-- API keys stored in `.env` or Windows Credential Manager; never committed to git.
+- API keys stored in `.env` or Windows Credential Manager; never committed to git. The current `.env` is under OneDrive, which is a documented Medium; the owner must decide whether to move it before go-live.
 - Query logs stay local; export and clear options available.
 - Source library is read-only except for approved renames (dry-run list shown and confirmed before any change).
 - Copyright: private use only; no redistribution of book content; exports contain short quotes with citations.
+- Dependency audits are part of the release checklist: `pip-audit` in the backend and `npm audit` in the frontend. Both were clean on 2026-11-15.
+- Uploaded and library text is treated as untrusted evidence; prompts explicitly reject instructions embedded in documents. XLSX cells are forced to text to prevent formula injection.
 
 ## 11. Deployment and operations (Windows)
 
@@ -159,7 +165,7 @@ the library or embedded. Run history is metadata only (90 days, deletable).
 | **P2 — Ingestion MVP** | Full pipeline; index for all three collections; benchmark run | Indexed library; benchmark results | **Gate 2:** S1 met (≥ 80% top-5); parse coverage ≥ 95% of pages |
 | **P3 — App MVP** | Login, cited chat, library browser, PDF viewer, settings | Working app demo | **Gate 3:** demo passes; no critical bugs |
 | **P4 — Workflows and export** | Templates W1–W5, Word/PDF/Markdown export, query history | Workflow-enabled app | **Gate 4:** UAT scenarios 1–5 passed |
-| **P5 — Hardening and handover** | Security review, backups, install guide, user manual, sign-off | Release package and manuals | **Gate 5:** owner acceptance; go-live on work PC |
+| **P5 — Hardening and handover** | Security review, backups, install guide, user manual, sign-off | Release package and manuals | **Gate 5:** security review passed (no Critical/High); owner acceptance, backup/restore and handover pending |
 | **P6 — Optional expansion** | More folders/regulations, multi-user, revision tracking, GitHub sync | Scoped per request | New gate per feature |
 
 **Indicative effort** (focused work blocks of 2–4 hours): P0 1 block; P1 1–2; P2 2–3; P3 3–4; P4 2–3; P5 1–2. Calendar time depends on review cycles and API availability.
@@ -213,7 +219,7 @@ the library or embedded. Run history is metadata only (90 days, deletable).
 
 ## 17. Immediate next steps
 
-1. Gate 4 is passed; proceed to Gate 5 hardening and handover: security review, backups, install guide, user manual and owner sign-off.
+1. Gate 4 is passed. The Gate 5 security review is complete (`15_Gate5_Security_Review.md`): no open Critical/High. Complete the owner decisions (OneDrive/ACL/backup), install guide, user manual and sign-off before go-live.
 2. The FAA/EASA Option A core pack is downloaded, checksummed, indexed and vectorised: seven documents / 4,065 chunks (FAA Parts 5/91/121/135, AC 120-92D, AC 21-58; EASA EAR Air Operations Rev 24). The EASA XML archive is retained for future section-level processing.
 3. Add a small source register/revision view. Retrieval has been tested against known FAA and EASA clauses; eCFR text sources still cite page 1, so section-level citation mapping is the next improvement.
 4. Resume the OCR backfill only when the owner is not using the app; Gate 2 remains open at 63.6% top-5 (14/22) with the owner-confirmed expectations.

@@ -101,6 +101,18 @@ The owner approved the architecture and all recommendations. Resolutions: light 
 | D-076 | The EASA Easy Access Rules for Air Operations Rev 24 is downloaded from the official EASA PDF endpoint and indexed (2,566 pages / 3,038 chunks / vectors); the official XML ZIP is retained for future machine-readable processing. The core pack is now seven documents / 4,065 chunks. EASA material stays local and is not redistributed | Completes the approved operations/SMS core pack and gives EASA equal retrieval status with FAA; PDF page numbers are usable immediately, while the XML archive preserves the option of section-level processing later | Implemented |
 | D-077 | `GET /api/documents/{id}/file` resolves cited files safely from both `AEROVAULT_LIBRARY_ROOT` and `$AEROVAULT_DATA_DIR/regulatory_library`, strips whitespace from stored `rel_path`, and returns the correct media type. The citation viewer renders PDFs with PDF.js and text-only sources through their indexed page text | FAA/EASA downloads live outside the main library root; eCFR sources are `.txt`, so treating every citation as a PDF caused `Missing PDF` on every regulatory citation | Implemented — regression test passes; Gate 4 UAT passed |
 
+## 10. Phase 5 security decisions (2026-11-15)
+
+| ID | Decision | Rationale | Status |
+|----|----------|-----------|--------|
+| D-078 | Gate 5 security review uses OWASP ASVS-lite and a short STRIDE model, scoped to a single trusted owner and localhost-only deployment; Critical/High findings are fixed before sign-off, Medium/Low are documented | Matches the owner-approved review defaults and keeps the review proportionate to the deployment | Completed — report `15_Gate5_Security_Review.md` |
+| D-079 | Runtime image/PDF parser Pillow is pinned to `>=12.3,<14.0` (installed 13.0.0); the backend image upgrades pip and setuptools before installing requirements | Pillow 11.3.0 carried 76 advisories and handles untrusted uploads; pip/setuptools were build-time-only advisories | Implemented — `pip-audit` clean |
+| D-080 | Frontend toolchain is Vite 8.3.8 with `@vitejs/plugin-react` 5.2.0; KaTeX is pinned to 0.19.1 through an npm override | Vite 5.4.21 had a high Windows dev-server advisory; the override removes the nested vulnerable KaTeX copies | Implemented — `npm audit` 0, typecheck and build pass |
+| D-081 | Login is throttled to 5 failed attempts per client per 15 minutes (HTTP 429, `Retry-After: 900`), with the counter cleared on success | The plan promised login throttling but the endpoint had none; a single owner still benefits from brute-force resistance | Implemented — regression test passes |
+| D-082 | Chat, compliance and problem-analysis prompts explicitly treat library/procedure text as untrusted evidence and forbid following embedded instructions | Uploaded and retrieved documents can contain prompt-injection text; citation validation alone cannot detect a manipulated analysis | Implemented — residual model risk remains |
+| D-083 | XLSX exports force every string cell to text (`data_type="s"`) after append | Prevents a formula-like value in a document or model answer from becoming an active Excel formula | Implemented — regression test passes |
+| D-084 | `.env`, `data/aerovault.db`, root containers, ACLs and backup/restore remain documented owner decisions for Gate 5 handover; no data or index migration was performed | The trusted-owner model accepts these as Medium/Low, but strict local-only data residency and recovery readiness need owner confirmation | Open — owner decision |
+
 ## 8. Phase 3 implementation decisions (2026-11-14)
 
 | ID | Decision | Rationale | Status |

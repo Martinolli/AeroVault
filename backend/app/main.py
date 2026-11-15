@@ -1,6 +1,6 @@
 """AeroVault API — Phase 3: auth + library browsing."""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import router
@@ -23,6 +23,18 @@ app.add_middleware(
 
 app.include_router(router)
 app.include_router(compliance_router)
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    """Keep API responses out of caches and reduce browser attack surface."""
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "no-referrer")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    response.headers.setdefault("Cache-Control", "no-store")
+    return response
 
 
 @app.get("/api/health")

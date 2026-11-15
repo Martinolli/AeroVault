@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
+from threading import Lock
+from time import monotonic
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from fastapi.responses import FileResponse, StreamingResponse
@@ -37,6 +39,47 @@ from app.config import settings
 from app.ingest.store import connect
 
 router = APIRouter(prefix="/api")
+
+_LOGIN_LOCK = Lock()
+_LOGIN_FAILURES: dict[str, list[float]] = {}
+_LOGIN_WINDOW_SECONDS = 15 * 60
+_LOGIN_MAX_FAILURES = 5
+
+
+def _client_key(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+def _check_login_rate(request: Request) -> None:
+    """Limit repeated failed logins from one local client."""
+    key = _client_key(request)
+    now = monotonic()
+    with _LOGIN_LOCK:
+        recent = [t for t in _LOGIN_FAILURES.get(key, []) if now - t < _LOGIN_WINDOW_SECONDS]
+        if recent:
+            _LOGIN_FAILURES[key] = recent
+        else:
+            _LOGIN_FAILURES.pop(key, None)
+        if len(recent) >= _LOGIN_MAX_FAILURES:
+            raise HTTPException(
+                status_code=429,
+                detail="Too many failed login attempts. Try again in 15 minutes.",
+                headers={"Retry-After": str(_LOGIN_WINDOW_SECONDS)},
+            )
+
+
+def _record_login_failure(request: Request) -> None:
+    key = _client_key(request)
+    now = monotonic()
+    with _LOGIN_LOCK:
+        recent = [t for t in _LOGIN_FAILURES.get(key, []) if now - t < _LOGIN_WINDOW_SECONDS]
+        recent.append(now)
+        _LOGIN_FAILURES[key] = recent[-_LOGIN_MAX_FAILURES:]
+
+
+def _clear_login_failures(request: Request) -> None:
+    with _LOGIN_LOCK:
+        _LOGIN_FAILURES.pop(_client_key(request), None)
 
 
 def get_conn():
@@ -79,10 +122,13 @@ def auth_setup(body: PasswordBody, response: Response, conn=Depends(get_conn)) -
 
 
 @router.post("/auth/login")
-def auth_login(body: LoginBody, response: Response, conn=Depends(get_conn)) -> dict:
+def auth_login(body: LoginBody, request: Request, response: Response, conn=Depends(get_conn)) -> dict:
+    _check_login_rate(request)
     user_id = authenticate(conn, body.password)
     if user_id is None:
+        _record_login_failure(request)
         raise HTTPException(status_code=401, detail="Invalid password")
+    _clear_login_failures(request)
     token, max_age = create_session(conn, user_id, body.remember)
     response.set_cookie(COOKIE_NAME, token, max_age=max_age, httponly=True, samesite="strict")
     return {"ok": True}

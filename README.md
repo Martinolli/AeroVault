@@ -4,9 +4,10 @@ Local, password-protected web app that indexes the aviation library (Aircraft Th
 
 ## Status
 
-**Phase 4 — problem-driven compliance workspace.** Login, library browser, cited chat, PDF viewer, the compliance
+**Phase 5 — hardening and handover.** Login, library browser, cited chat, PDF viewer, the compliance
 workspace and metadata-only run history are implemented. Gate 2 remains open at 63.6% top-5 (14/22) against the
-80% target; Gates 0, 1 and 3 passed. The approved core pack is downloaded, checksummed, indexed and vectorised:
+80% target; Gates 0, 1, 3 and 4 passed, and the Gate 5 security review passed with no open Critical/High findings.
+The approved core pack is downloaded, checksummed, indexed and vectorised:
 FAA Parts 5/91/121/135, AC 120-92D and AC 21-58 (six documents, 1,027 chunks), plus the EASA Easy Access Rules for
 Air Operations Rev 24 (2,566 pages, 3,038 chunks). The EASA XML archive is retained for future section-level
 processing. Problem-mode citations are evidence-validated; unsupported pages are shown as unverified instead of
@@ -48,6 +49,8 @@ docker-compose up --build -d
 - API health: http://127.0.0.1:18000/api/health
 
 Both host ports are bound to `127.0.0.1` only; nothing is exposed to the network. Host ports 18000/5273 were chosen because 8000/5173 are used by other local containers. The library is mounted read-only at `/library`.
+
+**Secret storage:** `.env` contains the billable OpenAI key and is gitignored, but this project currently lives under the owner's OneDrive tree. OneDrive is running and `.env`/`data/aerovault.db` are reparse points, so they may be cloud-synced. Before go-live, either move `.env` and `data/` to a local-only path or exclude the folder from OneDrive; rotate the key if it has already synced. The full decision is recorded in `Project_Documents/15_Gate5_Security_Review.md`.
 
 ## Compliance workspace
 
@@ -115,3 +118,4 @@ cite the section number until section-level mapping is added. The fetcher requir
 | `Project_Documents/5_Wireframes.md` | UI wireframes |
 | `Project_Documents/6_Retrieval_Benchmark.md` | 25-question retrieval benchmark |
 | `Project_Documents/7_Architecture_Decisions.md` | Architecture decision record (Gate 1 approved) |
+| `Project_Documents/15_Gate5_Security_Review.md` | Gate 5 security review: STRIDE, ASVS-lite, findings, fixes and accepted risks |
