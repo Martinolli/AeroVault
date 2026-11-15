@@ -69,7 +69,7 @@ def cmd_scan(args: argparse.Namespace, conn) -> None:
     if not root.exists():
         sys.exit(f"Library root not found: {root}")
     t0 = time.time()
-    counts = scan(root, conn)
+    counts = scan(root, conn, regulatory=getattr(args, "regulatory", False))
     print(json.dumps({"root": str(root), "seconds": round(time.time() - t0, 1), **counts}))
 
 
@@ -225,6 +225,7 @@ def main(argv: list[str] | None = None) -> None:
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_scan = sub.add_parser("scan")
+    p_scan.add_argument("--regulatory", action="store_true", help="Scan managed FAA/EASA/ICAO/AQAP/NASA source folders")
     p_scan.set_defaults(func=cmd_scan)
 
     p_ingest = sub.add_parser("ingest")

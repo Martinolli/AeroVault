@@ -14,8 +14,9 @@ import tempfile
 import threading
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import StreamingResponse
@@ -54,6 +55,12 @@ class Run:
     extra_columns: list[str]
     instructions: str
     ocr: bool
+    mode: str = "gap"
+    problem_brief: str = ""
+    authorities: list[str] = field(default_factory=list)
+    document_id: int | None = None
+    source_pages: list[dict] = field(default_factory=list)
+    narrative: dict = field(default_factory=dict)
     status: str = "ready"
     progress: int = 0
     results: list[dict] = field(default_factory=list)
@@ -86,6 +93,66 @@ def _cleanup() -> None:
     with _LOCK:
         for rid in [k for k, v in _RUNS.items() if v.created < cutoff]:
             _RUNS.pop(rid, None)
+    try:
+        conn = connect(Path(settings.data_dir) / "aerovault.db")
+        try:
+            conn.execute("DELETE FROM compliance_runs WHERE expires_at < ?", (datetime.now(timezone.utc).isoformat(),))
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _save_meta(run: Run) -> None:
+    """Persist metadata only: never procedure text, briefs, clauses or answers."""
+    created = datetime.fromtimestamp(run.created, tz=timezone.utc)
+    expires = created + timedelta(seconds=RUN_TTL_SECONDS)
+    try:
+        conn = connect(Path(settings.data_dir) / "aerovault.db")
+        try:
+            conn.execute(
+                "INSERT INTO compliance_runs "
+                "(run_id, filename, document_id, mode, created_at, expires_at, model, "
+                "standards_json, authorities_json, status, progress, total, error) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(run_id) DO UPDATE SET model=excluded.model, "
+                "standards_json=excluded.standards_json, authorities_json=excluded.authorities_json, "
+                "status=excluded.status, progress=excluded.progress, total=excluded.total, error=excluded.error",
+                (
+                    run.id,
+                    run.filename[:240],
+                    run.document_id,
+                    run.mode,
+                    created.isoformat(),
+                    expires.isoformat(),
+                    run.model,
+                    json.dumps([{"id": s.get("id"), "title": s.get("title", ""), "collection": s.get("collection", "")} for s in run.standards])[:4000],
+                    json.dumps(run.authorities)[:1000],
+                    run.status,
+                    run.progress,
+                    len(run.clauses),
+                    run.error[:400],
+                ),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _meta_row(row) -> dict:
+    item = dict(row)
+    try:
+        item["standards"] = json.loads(item.pop("standards_json") or "[]")
+    except (TypeError, ValueError):
+        item["standards"] = []
+    try:
+        item["authorities"] = json.loads(item.pop("authorities_json") or "[]")
+    except (TypeError, ValueError):
+        item["authorities"] = []
+    return item
 
 
 def _run_or_404(run_id: str) -> Run:
@@ -100,6 +167,10 @@ def _public(run: Run) -> dict:
     return {
         "run_id": run.id,
         "filename": run.filename,
+        "document_id": run.document_id,
+        "mode": run.mode,
+        "problem_brief": run.problem_brief,
+        "authorities": run.authorities,
         "status": run.status,
         "progress": run.progress,
         "total": len(run.clauses),
@@ -109,6 +180,7 @@ def _public(run: Run) -> dict:
         "instructions": run.instructions,
         "clauses": run.clauses,
         "results": run.results,
+        "narrative": run.narrative,
         "error": run.error,
     }
 
@@ -217,11 +289,14 @@ class ClauseBody(BaseModel):
 
 
 class RunBody(BaseModel):
-    standard_ids: list[int] = Field(min_length=1, max_length=MAX_STANDARDS)
+    standard_ids: list[int] = Field(default_factory=list, max_length=MAX_STANDARDS)
     model: str | None = None
-    clauses: list[ClauseBody] = Field(min_length=1, max_length=MAX_CLAUSES)
+    clauses: list[ClauseBody] = Field(default_factory=list, max_length=MAX_CLAUSES)
     extra_columns: list[str] = Field(default_factory=list, max_length=MAX_EXTRA_COLUMNS)
     instructions: str = Field(default="", max_length=1000)
+    mode: str = Field(default="gap", max_length=20)
+    problem_brief: str = Field(default="", max_length=6000)
+    authorities: list[str] = Field(default_factory=list, max_length=10)
 
 
 @router.post("/upload")
@@ -269,9 +344,78 @@ async def upload(file: UploadFile = File(...), ocr: bool = Form(False), _user=De
     )
     with _LOCK:
         _RUNS[run.id] = run
+    _save_meta(run)
     if ocr_pages:
         warnings.append(f"OCR was used on {ocr_pages} page(s).")
     return {"run_id": run.id, "filename": filename, "clauses": clauses, "warnings": warnings}
+
+
+@router.post("/library/{doc_id}")
+def library_run(doc_id: int, conn=Depends(_get_conn), _user=Depends(_user)) -> dict:
+    """Use an indexed library document as the procedure/evidence source.
+
+    The library text is already local; this endpoint only copies the needed
+    pages into the transient in-memory run. It does not create a new index or
+    upload a duplicate file.
+    """
+    _cleanup()
+    doc = conn.execute(
+        "SELECT id, title, collection, pages, status FROM documents WHERE id = ?", (doc_id,)
+    ).fetchone()
+    if doc is None:
+        raise HTTPException(status_code=404, detail="Library document not found")
+    rows = conn.execute(
+        "SELECT page_no, text, ocr_used FROM pages WHERE document_id = ? ORDER BY page_no",
+        (doc_id,),
+    ).fetchall()
+    if not rows:
+        raise HTTPException(status_code=400, detail="This library document has no extracted text")
+    if len(rows) > MAX_PAGES:
+        raise HTTPException(status_code=400, detail=f"Document has {len(rows)} pages; the limit is {MAX_PAGES}")
+    parts: list[tuple[str, str]] = []
+    source_pages: list[dict] = []
+    ocr_pages = 0
+    for row in rows:
+        text = (row["text"] or "").strip()
+        if not text:
+            continue
+        source_pages.append({"page": row["page_no"], "text": text[:12000], "ocr": bool(row["ocr_used"])})
+        for line in text.splitlines():
+            if line.strip():
+                parts.append(("", line.strip()))
+        if row["ocr_used"]:
+            ocr_pages += 1
+    clauses = _segment(parts)
+    if not clauses:
+        raise HTTPException(status_code=400, detail="No readable text found in the library document")
+    run = Run(
+        id=uuid.uuid4().hex[:16],
+        filename=doc["title"],
+        created=_now(),
+        clauses=clauses,
+        standards=[],
+        model=DEFAULT_MODEL,
+        extra_columns=[],
+        instructions="",
+        ocr=bool(ocr_pages),
+        mode="problem",
+        document_id=doc_id,
+        source_pages=source_pages,
+    )
+    with _LOCK:
+        _RUNS[run.id] = run
+    _save_meta(run)
+    warnings = []
+    if ocr_pages:
+        warnings.append(f"OCR text was used on {ocr_pages} page(s).")
+    return {
+        "run_id": run.id,
+        "filename": doc["title"],
+        "document_id": doc_id,
+        "collection": doc["collection"],
+        "clauses": clauses,
+        "warnings": warnings,
+    }
 
 
 @router.get("/standards")
@@ -302,21 +446,47 @@ def _standards(conn, ids: list[int]) -> list[dict]:
     return [dict(r) for r in rows]
 
 
-def _retrieve(conn, query: str, doc_ids: list[int], lance_dir: Path, k: int = 3) -> list[Hit]:
+def _retrieve(
+    conn,
+    query: str,
+    doc_ids: list[int] | None,
+    lance_dir: Path,
+    k: int = 3,
+    authorities: list[str] | None = None,
+    exclude_doc_id: int | None = None,
+) -> list[Hit]:
+    """Retrieve standards/procedure passages.
+
+    ``doc_ids`` empty/None means search the whole indexed library. Authorities
+    are collection labels (FAA, EASA, BOOKS, ...), not file extensions.
+    """
+    allowed = {a.strip().lower() for a in (authorities or []) if a.strip()}
     fts = fts_search(conn, query, 40)
-    fts = [h for h in fts if h.document_id in doc_ids]
+    if doc_ids:
+        fts = [h for h in fts if h.document_id in doc_ids]
+    if allowed:
+        fts = [h for h in fts if h.collection.strip().lower() in allowed]
+    if exclude_doc_id:
+        fts = [h for h in fts if h.document_id != exclude_doc_id]
     try:
         import lancedb
 
         qvec = embed_texts([query], settings.embedding_model, settings.openai_api_key)[0]
         table = lancedb.connect(str(lance_dir)).open_table("chunks")
-        where = "document_id IN (" + ",".join(str(int(x)) for x in doc_ids) + ")"
-        raw = table.search(qvec).where(where).limit(40).to_list()
+        search = table.search(qvec)
+        if doc_ids:
+            where = "document_id IN (" + ",".join(str(int(x)) for x in doc_ids) + ")"
+            search = search.where(where)
+        raw = search.limit(40).to_list()
         by_id = _enrich(conn, [r["chunk_id"] for r in raw])
         vec = []
         for r in raw:
             hit = by_id.get(r["chunk_id"])
-            if hit is not None:
+            if (
+                hit is not None
+                and (not allowed or hit.collection.strip().lower() in allowed)
+                and (not exclude_doc_id or hit.document_id != exclude_doc_id)
+            ):
                 hit.score = 1.0 / (1.0 + float(r.get("_distance", 0.0)))
                 vec.append(hit)
     except Exception:  # noqa: BLE001
@@ -435,12 +605,227 @@ def _compare(run: Run, clause: dict, hits: list[Hit]) -> dict:
     return base
 
 
+PROBLEM_PROMPT = """You are AeroVault's aviation safety and compliance analyst. \
+Help the owner understand a real operational or quality problem using ONLY the supplied \
+procedure text and library passages. Never invent requirements, clause numbers, pages, \
+organisations, or facts. Distinguish clearly between what the evidence says and what you infer.
+
+Return JSON only with this shape:
+{
+ "problem_understanding": "concise restatement of the problem and the decision needed",
+ "applicable_requirements": [
+   {"requirement": "short paraphrase", "authority": "FAA/EASA/ICAO/company/unknown",
+    "document": "source title", "clause": "visible clause or empty", "page": 12,
+    "evidence": "short quote, max 40 words", "relevance": "why it applies"}
+ ],
+ "procedure_evidence": [
+   {"finding": "what the procedure says or omits", "document": "procedure/document",
+    "clause": "section or empty", "page": 0, "evidence": "short quote"}
+ ],
+ "gaps_or_conflicts": [
+   {"issue": "specific gap, conflict or ambiguity", "why_it_matters": "operational consequence",
+    "severity": "High|Medium|Low", "evidence": "supporting quote or reference"}
+ ],
+ "contributing_factors": [
+   {"factor": "likely contributing factor", "explanation": "evidence-based explanation",
+    "confidence": "High|Medium|Low"}
+ ],
+ "risk_assessment": {"likelihood": "High|Medium|Low|Unclear", "severity": "High|Medium|Low|Unclear",
+   "risk_level": "High|Medium|Low|Unclear", "rationale": "why"},
+ "corrective_actions": [
+   {"action": "specific action", "owner": "suggested function", "priority": "High|Medium|Low",
+    "verification": "how to verify effectiveness"}
+ ],
+ "verification": "how to confirm the fix works",
+ "limitations": "what the available evidence cannot establish"
+}
+
+Rules:
+- Use the supplied passages; do not rely on general aviation knowledge for a requirement.
+- Page numbers must be visible in the supplied passage labels. If unknown, use 0.
+- If evidence is insufficient, say so in limitations rather than filling gaps.
+- Make the analysis useful for a manager: practical, specific and proportionate to the risk.
+- Do not produce a compliance matrix unless the user explicitly asks for one."""
+
+
+def _problem_source_excerpt(run: Run) -> str:
+    if run.source_pages:
+        blocks = []
+        used = 0
+        for page in run.source_pages:
+            text = (page.get("text") or "").strip()
+            if not text:
+                continue
+            block = f"[Document page {page.get('page')}] {text}"
+            if used + len(block) > 12000:
+                break
+            blocks.append(block)
+            used += len(block)
+        return "\n\n".join(blocks)
+    blocks = []
+    used = 0
+    for clause in run.clauses:
+        block = f"[{clause.get('heading') or 'Section ' + str(clause.get('id'))}] {clause.get('text', '')}"
+        if used + len(block) > 12000:
+            break
+        blocks.append(block)
+        used += len(block)
+    return "\n\n".join(blocks)
+
+
+def _analyse_problem(run: Run, hits: list[Hit]) -> dict:
+    base: dict[str, Any] = {
+        "problem_understanding": run.problem_brief,
+        "applicable_requirements": [],
+        "procedure_evidence": [],
+        "gaps_or_conflicts": [],
+        "contributing_factors": [],
+        "risk_assessment": {
+            "likelihood": "Unclear",
+            "severity": "Unclear",
+            "risk_level": "Unclear",
+            "rationale": "",
+        },
+        "corrective_actions": [],
+        "verification": "",
+        "limitations": "",
+        "citations": [],
+    }
+    if not hits:
+        base["limitations"] = (
+            "No matching library passages were found. Broaden the authority/source selection "
+            "or index the applicable standard before relying on this analysis."
+        )
+        return base
+
+    blocks = []
+    for i, hit in enumerate(hits, start=1):
+        blocks.append(
+            f"[S{i}] {hit.title} — page {hit.page_no} ({hit.collection})\n{hit.text.strip()[:2200]}"
+        )
+    user = (
+        f"Problem brief:\n{run.problem_brief.strip() or 'No separate brief supplied; infer the problem from the document.'}\n\n"
+        f"Procedure / document under review: {run.filename}\n{_problem_source_excerpt(run)}\n\n"
+        + (f"Owner instructions: {run.instructions}\n\n" if run.instructions else "")
+        + "Library passages (cite by [S#], document title and page):\n\n"
+        + "\n\n".join(blocks)
+    )
+    try:
+        import litellm
+
+        response = litellm.completion(
+            model=run.model,
+            messages=[
+                {"role": "system", "content": PROBLEM_PROMPT},
+                {"role": "user", "content": user},
+            ],
+            temperature=0,
+            max_tokens=3000,
+            response_format={"type": "json_object"},
+            api_key=settings.openai_api_key,
+            timeout=150,
+        )
+        data = json.loads(response.choices[0].message.content or "{}")
+    except Exception as exc:  # noqa: BLE001
+        base["limitations"] = f"Analysis failed: {type(exc).__name__}: {str(exc)[:240]}"
+        return base
+
+    def text(value: Any, limit: int = 4000) -> str:
+        return str(value or "").strip()[:limit]
+
+    base["problem_understanding"] = text(data.get("problem_understanding"), 5000) or base["problem_understanding"]
+    for key, fields in (
+        ("applicable_requirements", ("requirement", "authority", "document", "clause", "evidence", "relevance")),
+        ("procedure_evidence", ("finding", "document", "clause", "evidence")),
+        ("gaps_or_conflicts", ("issue", "why_it_matters", "severity", "evidence")),
+        ("contributing_factors", ("factor", "explanation", "confidence")),
+        ("corrective_actions", ("action", "owner", "priority", "verification")),
+    ):
+        raw = data.get(key)
+        if not isinstance(raw, list):
+            continue
+        clean = []
+        for item in raw[:12]:
+            if not isinstance(item, dict):
+                continue
+            row = {field: text(item.get(field), 1200) for field in fields}
+            if "page" in item:
+                try:
+                    row["page"] = int(item.get("page") or 0)
+                except (TypeError, ValueError):
+                    row["page"] = 0
+            clean.append(row)
+        base[key] = clean
+    risk = data.get("risk_assessment")
+    if isinstance(risk, dict):
+        base["risk_assessment"] = {
+            k: text(risk.get(k), 800)
+            for k in ("likelihood", "severity", "risk_level", "rationale")
+        }
+    base["verification"] = text(data.get("verification"), 3000)
+    base["limitations"] = text(data.get("limitations"), 3000)
+    by_title = {hit.title.lower(): hit for hit in hits}
+    for item in base["applicable_requirements"]:
+        match = by_title.get((item.get("document") or "").lower())
+        if match is None:
+            match = next(
+                (h for h in hits if item.get("document") and item["document"].lower() in h.title.lower()),
+                None,
+            )
+        if match is not None:
+            item["document_id"] = match.document_id
+            try:
+                page = int(item.get("page") or 0)
+            except (TypeError, ValueError):
+                page = 0
+            if page not in {h.page_no for h in hits if h.document_id == match.document_id}:
+                item["page"] = match.page_no
+    base["citations"] = [
+        {
+            "ref": f"S{i}",
+            "document": hit.title,
+            "collection": hit.collection,
+            "document_id": hit.document_id,
+            "page": hit.page_no,
+        }
+        for i, hit in enumerate(hits, start=1)
+    ]
+    return base
+
+
 def _execute(run: Run) -> None:
     conn = connect(Path(settings.data_dir) / "aerovault.db")
     try:
+        if run.mode in ("problem", "improvement"):
+            query = " ".join(
+                [run.problem_brief, run.filename]
+                + [c.get("heading", "") for c in run.clauses[:8]]
+            ).strip()
+            doc_ids = [s["id"] for s in run.standards if s["id"] != run.document_id]
+            hits = _retrieve(
+                conn,
+                query[:3000],
+                doc_ids or None,
+                Path(settings.data_dir) / "lancedb",
+                k=12,
+                authorities=[] if run.standards else run.authorities,
+                exclude_doc_id=run.document_id,
+            )
+            narrative = _analyse_problem(run, hits)
+            with _LOCK:
+                run.narrative = narrative
+                run.progress = 1
+            if run.cancel.is_set():
+                run.status = "cancelled"
+                _save_meta(run)
+                return
+            run.status = "done"
+            _save_meta(run)
+            return
         for i, clause in enumerate(run.clauses, start=1):
             if run.cancel.is_set():
                 run.status = "cancelled"
+                _save_meta(run)
                 return
             query = f"{clause.get('heading', '')}\n{clause.get('text', '')[:1200]}".strip()
             hits = _retrieve(conn, query, [s["id"] for s in run.standards], Path(settings.data_dir) / "lancedb")
@@ -451,11 +836,13 @@ def _execute(run: Run) -> None:
     except Exception as exc:  # noqa: BLE001
         run.error = f"{type(exc).__name__}: {exc}"[:400]
         run.status = "error"
+        _save_meta(run)
         return
     finally:
         conn.close()
     if not run.cancel.is_set():
         run.status = "done"
+        _save_meta(run)
 
 
 @router.post("/{run_id}/run")
@@ -464,29 +851,73 @@ def start_run(run_id: str, body: RunBody, conn=Depends(_get_conn), _user=Depends
     if run.status == "running":
         raise HTTPException(status_code=409, detail="This run is already in progress")
     model = body.model if body.model in ALLOWED_MODELS else DEFAULT_MODEL
-    standards = _standards(conn, body.standard_ids)
+    mode = body.mode.strip().lower()
+    if mode not in ("gap", "problem", "improvement"):
+        raise HTTPException(status_code=400, detail="mode must be gap, problem or improvement")
+    if mode == "gap" and not body.standard_ids:
+        raise HTTPException(status_code=400, detail="Select at least one standard for a gap review")
+    standards = _standards(conn, body.standard_ids) if body.standard_ids else []
     extras = [x.strip()[:40] for x in body.extra_columns if x.strip()]
     if len(extras) > MAX_EXTRA_COLUMNS:
         raise HTTPException(status_code=400, detail="At most 3 extra columns are allowed")
+    source_clauses = body.clauses or [
+        ClauseBody(id=c["id"], heading=c.get("heading", ""), text=c.get("text", ""))
+        for c in run.clauses
+    ]
     clauses = []
-    for i, c in enumerate(body.clauses[:MAX_CLAUSES], start=1):
+    for i, c in enumerate(source_clauses[:MAX_CLAUSES], start=1):
         if not c.text.strip() and not c.heading.strip():
             continue
         clauses.append({"id": str(i), "heading": c.heading.strip(), "text": c.text.strip()[:8000]})
     if not clauses:
         raise HTTPException(status_code=400, detail="At least one clause with text is required")
+    brief = body.problem_brief.strip()
+    if mode in ("problem", "improvement") and not brief:
+        brief = f"Analyse the supplied document for problems, gaps and improvement opportunities: {run.filename}"
+    authorities = []
+    for authority in body.authorities:
+        clean = authority.strip()[:60]
+        if clean and clean.lower() not in {x.lower() for x in authorities}:
+            authorities.append(clean)
     run.clauses = clauses
     run.standards = standards
     run.model = model
     run.extra_columns = extras
     run.instructions = body.instructions.strip()
+    run.mode = mode
+    run.problem_brief = brief[:6000]
+    run.authorities = authorities
+    run.narrative = {}
     run.status = "running"
     run.progress = 0
     run.results = []
     run.error = ""
     run.cancel.clear()
+    _save_meta(run)
     threading.Thread(target=_execute, args=(run,), daemon=True).start()
     return _public(run)
+
+
+@router.get("/history")
+def history(limit: int = 50, conn=Depends(_get_conn), _user=Depends(_user)) -> dict:
+    _cleanup()
+    limit = max(1, min(limit, 100))
+    rows = conn.execute(
+        "SELECT run_id, filename, document_id, mode, created_at, expires_at, model, "
+        "standards_json, authorities_json, status, progress, total, error "
+        "FROM compliance_runs WHERE expires_at >= ? ORDER BY created_at DESC LIMIT ?",
+        (datetime.now(timezone.utc).isoformat(), limit),
+    ).fetchall()
+    return {"runs": [_meta_row(r) for r in rows], "retention_days": 90}
+
+
+@router.delete("/history/{run_id}")
+def delete_history(run_id: str, conn=Depends(_get_conn), _user=Depends(_user)) -> dict:
+    conn.execute("DELETE FROM compliance_runs WHERE run_id = ?", (run_id,))
+    conn.commit()
+    with _LOCK:
+        _RUNS.pop(run_id, None)
+    return {"ok": True}
 
 
 @router.get("/{run_id}")
@@ -499,6 +930,7 @@ def cancel_run(run_id: str, _user=Depends(_user)) -> dict:
     run = _run_or_404(run_id)
     run.cancel.set()
     run.status = "cancelled"
+    _save_meta(run)
     return _public(run)
 
 
@@ -506,6 +938,15 @@ def cancel_run(run_id: str, _user=Depends(_user)) -> dict:
 def delete_run(run_id: str, _user=Depends(_user)) -> dict:
     with _LOCK:
         _RUNS.pop(run_id, None)
+    try:
+        conn = connect(Path(settings.data_dir) / "aerovault.db")
+        try:
+            conn.execute("DELETE FROM compliance_runs WHERE run_id = ?", (run_id,))
+            conn.commit()
+        finally:
+            conn.close()
+    except Exception:  # noqa: BLE001
+        pass
     return {"ok": True}
 
 
@@ -514,7 +955,160 @@ def _safe_name(name: str) -> str:
     return re.sub(r"[^A-Za-z0-9._ -]+", "_", stem) or "procedure"
 
 
+def _problem_xlsx(run: Run) -> bytes:
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.utils import get_column_letter
+
+    n = run.narrative
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Problem analysis"
+    ws.append(["AeroVault problem-driven analysis"])
+    ws["A1"].font = Font(bold=True, size=14, color="0F4C81")
+    ws.append(["Document", run.filename])
+    ws.append(["Mode", run.mode])
+    ws.append(["Model", run.model])
+    ws.append(["Generated", datetime.now().strftime("%Y-%m-%d %H:%M")])
+    ws.append(["Problem understanding", n.get("problem_understanding", "")])
+    risk = n.get("risk_assessment") or {}
+    ws.append(["Risk", f"{risk.get('risk_level', 'Unclear')} (likelihood {risk.get('likelihood', 'Unclear')}, severity {risk.get('severity', 'Unclear')})"])
+    ws.append(["Risk rationale", risk.get("rationale", "")])
+    ws.append(["Verification", n.get("verification", "")])
+    ws.append(["Limitations", n.get("limitations", "")])
+    ws.column_dimensions["A"].width = 24
+    ws.column_dimensions["B"].width = 100
+    for row in ws.iter_rows(min_row=2):
+        row[0].font = Font(bold=True)
+        for cell in row:
+            cell.alignment = Alignment(vertical="top", wrap_text=True)
+
+    def sheet(name: str, headers: list[str], rows: list[list], widths: list[int]) -> None:
+        sh = wb.create_sheet(name)
+        sh.append(headers)
+        for cell in sh[1]:
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = PatternFill("solid", fgColor="0F4C81")
+            cell.alignment = Alignment(vertical="center", wrap_text=True)
+        for row in rows:
+            sh.append(row)
+        for i, width in enumerate(widths, start=1):
+            sh.column_dimensions[get_column_letter(i)].width = width
+        for row in sh.iter_rows(min_row=2):
+            for cell in row:
+                cell.alignment = Alignment(vertical="top", wrap_text=True)
+        sh.freeze_panes = "A2"
+
+    sheet(
+        "Requirements",
+        ["#", "Requirement", "Authority", "Document", "Clause", "Page", "Evidence", "Relevance"],
+        [
+            [i, r.get("requirement", ""), r.get("authority", ""), r.get("document", ""),
+             r.get("clause", ""), r.get("page", 0), r.get("evidence", ""), r.get("relevance", "")]
+            for i, r in enumerate(n.get("applicable_requirements", []), start=1)
+        ],
+        [5, 45, 14, 35, 14, 7, 50, 40],
+    )
+    sheet(
+        "Findings",
+        ["#", "Issue / gap", "Why it matters", "Severity", "Evidence"],
+        [
+            [i, r.get("issue", ""), r.get("why_it_matters", ""), r.get("severity", ""), r.get("evidence", "")]
+            for i, r in enumerate(n.get("gaps_or_conflicts", []), start=1)
+        ],
+        [5, 45, 55, 10, 55],
+    )
+    sheet(
+        "Actions",
+        ["#", "Action", "Owner", "Priority", "Verification"],
+        [
+            [i, r.get("action", ""), r.get("owner", ""), r.get("priority", ""), r.get("verification", "")]
+            for i, r in enumerate(n.get("corrective_actions", []), start=1)
+        ],
+        [5, 60, 22, 10, 50],
+    )
+    sheet(
+        "Citations",
+        ["Ref", "Document", "Collection", "Page"],
+        [[c.get("ref", ""), c.get("document", ""), c.get("collection", ""), c.get("page", 0)] for c in n.get("citations", [])],
+        [8, 60, 18, 8],
+    )
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+def _problem_docx(run: Run) -> bytes:
+    from docx import Document
+
+    n = run.narrative
+    doc = Document()
+    doc.add_heading("Problem-driven analysis", level=0)
+    doc.add_paragraph(f"Document: {run.filename}")
+    doc.add_paragraph(f"Mode: {run.mode}  |  Model: {run.model}  |  Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    doc.add_heading("Problem understanding", level=1)
+    doc.add_paragraph(n.get("problem_understanding", ""))
+
+    def bullets(title: str, key: str, field: str) -> None:
+        items = n.get(key) or []
+        if not items:
+            return
+        doc.add_heading(title, level=1)
+        for item in items:
+            doc.add_paragraph(str(item.get(field, "")), style="List Bullet")
+            extras = [f"{k.replace('_', ' ').title()}: {v}" for k, v in item.items() if k != field and v]
+            if extras:
+                doc.add_paragraph("; ".join(extras), style="List Bullet 2")
+
+    doc.add_heading("Applicable requirements", level=1)
+    requirements = n.get("applicable_requirements") or []
+    if requirements:
+        table = doc.add_table(rows=1, cols=5)
+        table.style = "Light Grid Accent 1"
+        for i, h in enumerate(["Requirement", "Authority / document", "Clause", "Page", "Evidence"]):
+            table.rows[0].cells[i].text = h
+        for item in requirements:
+            cells = table.add_row().cells
+            values = [
+                item.get("requirement", ""),
+                f"{item.get('authority', '')} / {item.get('document', '')}",
+                item.get("clause", ""),
+                str(item.get("page", 0)),
+                item.get("evidence", ""),
+            ]
+            for i, value in enumerate(values):
+                cells[i].text = str(value)[:900]
+    bullets("Gaps or conflicts", "gaps_or_conflicts", "issue")
+    bullets("Contributing factors", "contributing_factors", "factor")
+    bullets("Corrective actions", "corrective_actions", "action")
+    doc.add_heading("Risk assessment", level=1)
+    risk = n.get("risk_assessment") or {}
+    doc.add_paragraph(
+        f"Risk level: {risk.get('risk_level', 'Unclear')}; likelihood: {risk.get('likelihood', 'Unclear')}; "
+        f"severity: {risk.get('severity', 'Unclear')}. {risk.get('rationale', '')}"
+    )
+    doc.add_heading("Verification and limitations", level=1)
+    doc.add_paragraph(n.get("verification", ""))
+    doc.add_paragraph(n.get("limitations", ""))
+    citations = n.get("citations") or []
+    if citations:
+        doc.add_heading("Page citations", level=1)
+        for citation in citations:
+            doc.add_paragraph(
+                f"[{citation.get('ref', '')}] {citation.get('document', '')} — page {citation.get('page', 0)}",
+                style="List Bullet",
+            )
+    doc.add_paragraph(
+        "Decision-support output. Verify every finding against the cited source page before acting."
+    )
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
+
+
 def _xlsx(run: Run) -> bytes:
+    if run.narrative and run.mode in ("problem", "improvement"):
+        return _problem_xlsx(run)
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Font, PatternFill
     from openpyxl.utils import get_column_letter
@@ -562,6 +1156,8 @@ def _xlsx(run: Run) -> bytes:
 
 
 def _docx(run: Run) -> bytes:
+    if run.narrative and run.mode in ("problem", "improvement"):
+        return _problem_docx(run)
     from docx import Document
     from docx.shared import Pt
 
@@ -611,10 +1207,11 @@ def _docx(run: Run) -> bytes:
 @router.get("/{run_id}/export.xlsx")
 def export_xlsx(run_id: str, _user=Depends(_user)):
     run = _run_or_404(run_id)
-    if not run.results:
+    if not run.results and not run.narrative:
         raise HTTPException(status_code=400, detail="Run has no results yet")
     data = _xlsx(run)
-    name = f"{_safe_name(run.filename)}_compliance.xlsx"
+    suffix = "analysis" if run.narrative and run.mode in ("problem", "improvement") else "compliance"
+    name = f"{_safe_name(run.filename)}_{suffix}.xlsx"
     return StreamingResponse(
         io.BytesIO(data),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -625,10 +1222,11 @@ def export_xlsx(run_id: str, _user=Depends(_user)):
 @router.get("/{run_id}/export.docx")
 def export_docx(run_id: str, _user=Depends(_user)):
     run = _run_or_404(run_id)
-    if not run.results:
+    if not run.results and not run.narrative:
         raise HTTPException(status_code=400, detail="Run has no results yet")
     data = _docx(run)
-    name = f"{_safe_name(run.filename)}_compliance.docx"
+    suffix = "analysis" if run.narrative and run.mode in ("problem", "improvement") else "compliance"
+    name = f"{_safe_name(run.filename)}_{suffix}.docx"
     return StreamingResponse(
         io.BytesIO(data),
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",

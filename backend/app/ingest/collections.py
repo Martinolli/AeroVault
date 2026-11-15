@@ -11,15 +11,27 @@ COLLECTIONS: dict[str, str] = {
     "Quality ISO SAE": "QUALITY ISO SAE",
 }
 
+# Managed official-source folders (normally under data/regulatory_library).
+# They are scanned only with the explicit --regulatory flag so the owner's
+# large FAA/EASA/ICAO folders are not pulled into the core pack by accident.
+REGULATORY_COLLECTIONS: dict[str, str] = {
+    "FAA": "faa",
+    "EASA": "easa",
+    "ICAO": "icao",
+    "AQAP": "aqap",
+    "NASA": "nasa",
+}
+
 # Directory names never scanned (quarantine, the app itself, data folders).
 EXCLUDE_PARTS: set[str] = {"AeroVault", "_QUARANTINE", ".git", "node_modules"}
 
 
-def classify_path(rel_path: str) -> str | None:
+def classify_path(rel_path: str, regulatory: bool = False) -> str | None:
     """Return the collection name for a library-relative path, or None."""
     rel = rel_path.replace("\\", "/").lower()
     best: tuple[int, str] | None = None
-    for name, prefix in COLLECTIONS.items():
+    mapping = {**COLLECTIONS, **REGULATORY_COLLECTIONS} if regulatory else COLLECTIONS
+    for name, prefix in mapping.items():
         p = prefix.lower()
         if rel == p or rel.startswith(p + "/"):
             length = len(p)

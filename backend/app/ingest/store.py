@@ -91,6 +91,22 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     sources_json TEXT NOT NULL DEFAULT '[]',
     created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS compliance_runs (
+    run_id TEXT PRIMARY KEY,
+    filename TEXT NOT NULL,
+    document_id INTEGER,
+    mode TEXT NOT NULL DEFAULT 'gap',
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    model TEXT NOT NULL,
+    standards_json TEXT NOT NULL DEFAULT '[]',
+    authorities_json TEXT NOT NULL DEFAULT '[]',
+    status TEXT NOT NULL DEFAULT 'ready',
+    progress INTEGER NOT NULL DEFAULT 0,
+    total INTEGER NOT NULL DEFAULT 0,
+    error TEXT NOT NULL DEFAULT ''
+);
 """
 
 

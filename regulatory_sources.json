@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-11-15",
+  "notes": "Controlled official-source download manifest for the AeroVault FAA/EASA core pack. Add only official sources. eCFR date is the current available issue date at creation; refresh it before a new download cycle. EASA/EAR material may be copyrighted; do not redistribute files.",
+  "sources": [
+    {
+      "id": "faa-14cfr-5",
+      "authority": "FAA",
+      "document_type": "regulation",
+      "title": "14 CFR Part 5 — Safety Management Systems",
+      "url": "https://www.ecfr.gov/api/versioner/v1/full/2026-11-12/title-14.xml?part=5",
+      "version": "2026-11-12",
+      "effective_date": "",
+      "applicability": "US aviation organisations subject to Part 5 SMS requirements",
+      "access_note": "Official eCFR API. eCFR is an editorial version; verify against the current Federal Register rule before operational use.",
+      "filename": "14_CFR_Part_5.xml",
+      "tags": [
+        "ecfr",
+        "primary",
+        "sms",
+        "us"
+      ]
+    },
+    {
+      "id": "faa-14cfr-91",
+      "authority": "FAA",
+      "document_type": "regulation",
+      "title": "14 CFR Part 91 — General Operating and Flight Rules",
+      "url": "https://www.ecfr.gov/api/versioner/v1/full/2026-11-12/title-14.xml?part=91",
+      "version": "2026-11-12",
+      "effective_date": "",
+      "applicability": "US general aviation operating rules",
+      "access_note": "Official eCFR API. Large part; verify the current version before use.",
+      "filename": "14_CFR_Part_91.xml",
+      "tags": [
+        "ecfr",
+        "primary",
+        "operations",
+        "us"
+      ]
+    },
+    {
+      "id": "faa-14cfr-121",
+      "authority": "FAA",
+      "document_type": "regulation",
+      "title": "14 CFR Part 121 — Operating Requirements: Domestic, Flag, and Supplemental Operations",
+      "url": "https://www.ecfr.gov/api/versioner/v1/full/2026-11-12/title-14.xml?part=121",
+      "version": "2026-11-12",
+      "effective_date": "",
+      "applicability": "US air carrier operations",
+      "access_note": "Official eCFR API. Large part; verify the current version before use.",
+      "filename": "14_CFR_Part_121.xml",
+      "tags": [
+        "ecfr",
+        "primary",
+        "operations",
+        "air-carrier",
+        "us"
+      ]
+    },
+    {
+      "id": "faa-14cfr-135",
+      "authority": "FAA",
+      "document_type": "regulation",
+      "title": "14 CFR Part 135 — Operating Requirements: Commuter and On Demand Operations",
+      "url": "https://www.ecfr.gov/api/versioner/v1/full/2026-11-12/title-14.xml?part=135",
+      "version": "2026-11-12",
+      "effective_date": "",
+      "applicability": "US commuter and on-demand operations",
+      "access_note": "Official eCFR API. Verify the current version before use.",
+      "filename": "14_CFR_Part_135.xml",
+      "tags": [
+        "ecfr",
+        "primary",
+        "operations",
+        "us"
+      ]
+    },
+    {
+      "id": "faa-ac-120-92d",
+      "authority": "FAA",
+      "document_type": "advisory_circular",
+      "title": "AC 120-92D — Safety Management Systems for Aviation Service Providers",
+      "url": "https://www.faa.gov/documentLibrary/media/Advisory_Circular/AC_120-92D_FAA_Web.pdf",
+      "version": "D",
+      "effective_date": "2024-05-21",
+      "applicability": "US aviation service providers implementing an SMS",
+      "access_note": "Official FAA Advisory Circular PDF. AC 120-92D cancels AC 120-92B.",
+      "filename": "AC_120-92D.pdf",
+      "tags": [
+        "faa",
+        "ac",
+        "sms",
+        "primary"
+      ]
+    },
+    {
+      "id": "faa-ac-21-58",
+      "authority": "FAA",
+      "document_type": "advisory_circular",
+      "title": "AC 21-58 — Safety Management Systems for Part 21 Type and Production Certificate Holders",
+      "url": "https://www.faa.gov/documentLibrary/media/Advisory_Circular/AC_21-58.pdf",
+      "version": "Initial",
+      "effective_date": "2024-04-26",
+      "applicability": "Part 21 type and production certificate holders",
+      "access_note": "Official FAA Advisory Circular PDF.",
+      "filename": "AC_21-58.pdf",
+      "tags": [
+        "faa",
+        "ac",
+        "manufacturing",
+        "quality",
+        "sms",
+        "primary"
+      ]
+    },
+    {
+      "id": "easa-ear-air-ops",
+      "authority": "EASA",
+      "document_type": "easy_access_rules",
+      "title": "Easy Access Rules for Air Operations — Revision 24",
+      "url": "https://www.easa.europa.eu/en/document-library/easy-access-rules/easy-access-rules-air-operations",
+      "version": "Revision 24 (March 2026)",
+      "effective_date": "2026-03-27",
+      "applicability": "EU air operations: Part-ARO, ORO, CAT, SPA, NCC, NCO, SPO and associated AMC/GM",
+      "access_note": "Official EASA landing page. Download the PDF or machine-readable XML from the page; EASA material may be copyrighted and must not be redistributed. The downloader records the landing page only unless a direct PDF/XML URL is added.",
+      "filename": "EASA_EAR_Air_Operations_R24.html",
+      "tags": [
+        "easa",
+        "ear",
+        "operations",
+        "primary"
+      ]
+    }
+  ]
+}

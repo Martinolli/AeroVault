@@ -1,6 +1,6 @@
 # 13 — Regulatory Source Inventory and Ingestion Options
 
-**Date:** 2026-11-15  |  **Status:** inventory complete — owner decisions needed  |  **Related:** 12_Flexible_Compliance_and_Regulatory_Expansion.md
+**Date:** 2026-11-15  |  **Status:** inventory complete — Option A approved; fetcher implemented, core pack pending  |  **Related:** 12_Flexible_Compliance_and_Regulatory_Expansion.md
 
 ## 1. Summary
 
@@ -101,4 +101,26 @@ The owner provides a list of the documents that matter most. This is the most ac
 
 ## 7. Recommended next action
 
-Approve **Option A** and one first domain. Then I will build the source register, ingest the core pack, add the problem-analysis mode (uploaded or library document + problem brief + selected sources), implement the approved metadata-only history, and run a first real problem through it before expanding the collection.
+Option A was approved on 2026-11-15 with operations/SMS plus manufacturing quality as the first domain. The
+problem-analysis mode, indexed-library input, authority scoping and metadata-only history are implemented. The
+next action is to populate the core pack from official sources, record versions/checksums in the source register,
+ingest deliberately, and run a real problem through the workflow before expanding the collection.
+
+## 8. Implementation status (2026-11-15)
+
+The controlled fetcher is `backend/app/ingest/regulatory.py`. The tracked template is
+`regulatory_sources.json`; copy it to `data/regulatory_sources.json` before fetching so runtime status and
+checksums stay out of the repository.
+The manifest currently contains:
+
+| Source | Form | Status |
+|---|---|---|
+| 14 CFR Parts 5, 91, 121, 135 | Official eCFR XML API, issue date 2026-11-12 | Part 5 downloaded/checksummed/indexed text-only; Parts 91/121/135 planned |
+| AC 120-92D | Official FAA PDF | Planned |
+| AC 21-58 | Official FAA PDF | Downloaded, checksummed and indexed text-only (62 pp; 1,114,657 bytes) |
+| EASA Easy Access Rules for Air Operations Rev 24 | Official EASA landing page; PDF/XML links | Planned |
+
+The fetcher accepts HTTPS only, records SHA-256, bytes, content type, fetch time and status, refuses to overwrite
+unless `--force` is supplied, and writes eCFR `.txt` companions. It does not automatically index downloads. The
+EASA landing page is used because direct PDF/XML links are generated on the official page and may change; add the
+direct URL after downloading. EASA and ICAO material may be copyrighted and must not be redistributed.

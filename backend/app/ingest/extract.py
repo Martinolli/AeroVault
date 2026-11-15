@@ -95,8 +95,36 @@ def _extract_pypdf(path: Path, password: str) -> list[PageText]:
     return pages
 
 
+def _extract_text(path: Path) -> list[PageText]:
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return [PageText(1, text)] if text.strip() else []
+
+
+def _extract_docx(path: Path) -> list[PageText]:
+    from docx import Document
+
+    doc = Document(str(path))
+    parts = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
+    for table in doc.tables:
+        for row in table.rows:
+            cells = [c.text.strip() for c in row.cells if c.text.strip()]
+            if cells:
+                parts.append(" | ".join(cells))
+    text = "\n".join(parts)
+    return [PageText(1, text)] if text.strip() else []
+
+
 def extract_pages(path: Path, ocr: bool = False, password: str = "") -> tuple[list[PageText], str]:
     """Extract page text. Returns (pages, engine). Raises on unreadable files."""
+    suffix = path.suffix.lower()
+    if suffix == ".txt":
+        return _extract_text(path), "text"
+    if suffix == ".docx":
+        return _extract_docx(path), "docx"
+    if suffix == ".xml":
+        from .regulatory import _xml_to_text
+
+        return [PageText(1, _xml_to_text(path.read_bytes()))], "xml"
     try:
         return _extract_fitz(path, ocr, password), "pymupdf"
     except ImportError:

@@ -1,6 +1,6 @@
 # 1 — Aviation Library Assistant: Project Plan
 
-**Version:** 0.9 (FAA/EASA regulatory pack and problem-driven mode)
+**Version:** 1.0 (problem-driven compliance, metadata history, regulatory fetcher)
 **Date:** 2026-11-15
 **Owner:** J. B. Martinolli
 **Status:** Gates 0 and 1 passed. Phase 2 index is nearly complete (519 indexed, 2 partial, 1 `text_only`;
@@ -8,12 +8,13 @@
 (14/22) vs the 80% target; the owner reviewed the eight misses on 2026-11-15 and kept the current expected
 pages, so no expectation changes were made. The LLM reranker (D-054) and `text-embedding-3-large` (D-062)
 were tested and rejected. Phase 3 MVP is built and verified locally; **Gate 3 passed on 2026-11-14**. Phase 4
-(compliance workspace, W3) MVP is built: PDF/DOCX upload, clause-level comparison against standards named per
-request, DOCX/XLSX export. The owner now wants a more flexible workflow: **problem-driven analysis first**, with
-both uploaded and indexed library documents, followed by document-versus-framework gap/improvement reviews.
+(compliance workspace, W3) is implemented beyond the original clause matrix: PDF/DOCX upload, indexed-library
+document input, **problem-driven analysis first**, improvement reviews, the original clause-level gap review,
+authority/source scoping, metadata-only run history and DOCX/XLSX export. The official-source fetcher and
+FAA/EASA core-pack manifest are in place; the core pack still needs to be downloaded, reviewed and indexed.
 **FAA and EASA are the primary reference sources**; ICAO, GCAA, AQAP and NASA are secondary. The regulatory
 inventory is in `13_Regulatory_Source_Inventory.md`; strategy is in `12_Flexible_Compliance_and_Regulatory_Expansion.md`.
-The remaining decisions are the first domain and core-pack option. Gate 4 UAT pending.
+The owner approved Option A (focused FAA/EASA core pack) and problem-driven analysis first. Gate 4 UAT is pending.
 
 ---
 
@@ -114,7 +115,14 @@ Hybrid retrieval (BM25 + vector) → merge and deduplicate → optional rerank o
 
 All templates are user-editable and stored in configuration, not hard-coded.
 
-**Proposed Phase 4 extension (pending owner approval):** upload an owner-supplied procedure (PDF/DOCX) in the UI, extract its text, select one or more standards, and produce a clause-by-clause compliance matrix (requirement, evidence found, gap/observation, citation to the standard page). Uploaded procedures are treated as untrusted input and are not added to the library unless the owner explicitly imports them.
+**Phase 4 implementation (approved 2026-11-15):** the compliance workspace accepts an owner-supplied PDF/DOCX
+or an already-indexed library document. The default mode is problem-driven analysis: the owner describes an
+operational or quality problem, selects FAA/EASA or other source collections, and receives a flexible,
+evidence-backed narrative covering requirements, procedure evidence, gaps/conflicts, contributing factors,
+risk, corrective actions, verification, limitations and page citations. An improvement review uses the same
+narrative without forcing a matrix. The clause-level gap review remains available for explicit
+document-versus-standard requests. Uploaded procedures are untrusted, transient input and are never added to
+the library or embedded. Run history is metadata only (90 days, deletable).
 
 ## 10. Security and privacy
 
@@ -202,7 +210,7 @@ All templates are user-editable and stored in configuration, not hard-coded.
 
 ## 17. Immediate next steps
 
-1. Owner runs `docker compose up --build -d`, then the ingestion batches (`python -m app.ingest.pipeline scan` and `ingest --limit 20` repeatedly) with the OpenAI key in `.env`.
-2. Owner fills expected pages in `benchmark_expected.csv` (manual, or auto-fill + spot-check), runs the benchmark runner; Gate 2 review (top-5 recall ≥ 80%).
-3. Phase 3: login, cited chat, library browser, PDF viewer, settings.
-4. OCR background re-ingest of the 51 scanned books with no text layer (D-018), timing to be confirmed by the owner.
+1. Owner runs Gate 4 UAT on the problem-driven workflow: one real problem brief with an uploaded procedure, one with an indexed document, one improvement review and one gap review; verify citations and both exports.
+2. Build the FAA/EASA Option A core pack: run the manifest dry-run, fetch the official FAA parts/ACs, obtain the EASA EAR PDF/XML from the official page, record versions/checksums and ingest deliberately.
+3. Add a small source register/revision view and test retrieval against known FAA/EASA clauses before relying on the new pack.
+4. Resume the OCR backfill only when the owner is not using the app; Gate 2 remains open at 63.6% top-5 (14/22) with the owner-confirmed expectations.

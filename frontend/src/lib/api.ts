@@ -119,14 +119,23 @@ export async function uploadCompliance(file: File, ocr: boolean): Promise<Compli
   return (await res.json()) as ComplianceUpload;
 }
 
-export async function downloadCompliance(runId: string, format: "docx" | "xlsx", fallback: string) {
+export async function libraryCompliance(documentId: number): Promise<ComplianceUpload> {
+  return api<ComplianceUpload>(`/api/compliance/library/${documentId}`, { method: "POST" });
+}
+
+export async function downloadCompliance(
+  runId: string,
+  format: "docx" | "xlsx",
+  fallback: string,
+  kind: "compliance" | "analysis" = "compliance",
+) {
   const res = await fetch(`/api/compliance/${runId}/export.${format}`, { credentials: "include" });
   if (!res.ok) throw new ApiError(`Export failed (HTTP ${res.status})`, res.status);
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${fallback}_compliance.${format}`;
+  a.download = `${fallback}_${kind}.${format}`;
   a.click();
   URL.revokeObjectURL(url);
 }

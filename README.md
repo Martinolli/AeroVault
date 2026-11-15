@@ -4,7 +4,10 @@ Local, password-protected web app that indexes the aviation library (Aircraft Th
 
 ## Status
 
-**Phase 2 — ingestion MVP (code complete, awaiting the owner's first run).** Login, library and chat arrive in Phase 3.
+**Phase 4 — problem-driven compliance workspace.** Login, library browser, cited chat, PDF viewer, the compliance
+workspace and metadata-only run history are implemented. Gate 2 remains open at 63.6% top-5 (14/22) against the
+80% target; Gates 0, 1 and 3 passed. The FAA/EASA core-pack fetcher is ready, but the pack still needs to be
+downloaded, reviewed and indexed.
 
 ## Layout
 
@@ -12,7 +15,8 @@ Local, password-protected web app that indexes the aviation library (Aircraft Th
 AeroVault/
 ├─ backend/            FastAPI service + ingestion/retrieval (Python 3.11)
 │  ├─ app/
-│  │  ├─ ingest/       scan, extract, chunk, embed, store, pipeline CLI
+│  │  ├─ ingest/       scan, extract, chunk, embed, store, pipeline CLI,
+│  │  │                manifest-driven regulatory fetcher
 │  │  └─ retrieve/     hybrid search (BM25 + vectors) and benchmark runner
 │  ├─ Dockerfile
 │  └─ requirements.txt
@@ -34,13 +38,21 @@ AeroVault/
 ```powershell
 Copy-Item .env.example .env
 # edit .env: set AEROVAULT_OPENAI_API_KEY and AEROVAULT_LIBRARY_ROOT (Windows path with forward slashes)
-docker compose up --build -d
+docker-compose up --build -d
 ```
 
 - UI: http://127.0.0.1:5273
 - API health: http://127.0.0.1:18000/api/health
 
 Both host ports are bound to `127.0.0.1` only; nothing is exposed to the network. Host ports 18000/5273 were chosen because 8000/5173 are used by other local containers. The library is mounted read-only at `/library`.
+
+## Compliance workspace
+
+Open **Compliance** in the app. The default **Problem-driven analysis** mode accepts an uploaded PDF/DOCX or an
+already indexed library document, a problem brief and an optional authority scope (FAA, EASA, ICAO, AQAP, NASA,
+books). It returns a flexible evidence-backed narrative with page citations, risk and corrective actions. The
+**Gap / coverage review** mode keeps the clause-by-clause matrix for requests that explicitly name standards.
+Uploads are transient and never stored or embedded. Run history is metadata only, kept for 90 days and deletable.
 
 ## Ingestion (Phase 2)
 
@@ -77,6 +89,15 @@ docker compose exec backend python -m app.retrieve.benchmark
 ```
 
 To score: copy `data/benchmark_results.csv`, fill `data/benchmark_expected.csv` with `qnum,doc_contains,page` from manual page confirmation, then re-run with `--expected /data/benchmark_expected.csv`. Gate 2 passes at top-5 recall ≥ 0.8.
+
+## Official regulatory sources
+
+The tracked manifest template is `regulatory_sources.json`; copy it to `data/regulatory_sources.json` before a
+fetch so runtime status/checksums stay out of the repository. The fetcher is `backend/app/ingest/regulatory.py`.
+It accepts official HTTPS sources only, records SHA-256/version/access notes and writes files under
+`data/regulatory_library/`. See `Project_Documents/13_Regulatory_Source_Inventory.md` and the packaged
+`aerovault-project` skill for the FAA/EASA core-pack sequence. eCFR XML needs a real available issue date;
+`current` is not a valid date segment.
 
 ## Project documents
 
