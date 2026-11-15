@@ -88,7 +88,9 @@ The owner approved the architecture and all recommendations. Resolutions: light 
 |----|----------|-----------|--------|
 | D-064 | Gate 3 is marked **passed** on the owner's review (clean UI, persistent history, comprehensive answers on both models, tables render well) | Owner explicitly accepted the MVP on 2026-11-14 | Passed |
 | D-065 | Chat answers render LaTeX with `remark-math` + `rehype-katex`; the system prompt asks for `$...$` inline and `$$...$$` display math | Aeronautics and dynamics books are formula-heavy; KaTeX is client-side and safe (no raw HTML) | Implemented |
-| D-066 | Compliance workspace (W3) scope confirmed by owner: input PDF + DOCX; output DOCX + XLSX; clause-level matching against selected indexed standards; uploads are transient and are **not** stored or embedded | Owner wants a practical gap-check tool without polluting the library index; clause-level gives actionable results | Design drafted — approval pending |
+| D-066 | Compliance workspace (W3): PDF + DOCX input; DOCX + XLSX output; clause-level matching against standards named per request; up to 3 optional columns; OCR opt-in; 60-clause cap; uploads transient and never stored or embedded | Owner wants a practical gap-check tool without polluting the library index; clause-level gives actionable results | Implemented — MVP tested |
+| D-067 | Formula rendering normalises both `\(...\)`/`\[...\]` and `$...$`/`$$...$$` before KaTeX; the owner's formula test DOCX showed the model emitted parenthesis delimiters | KaTeX only understands dollar delimiters; supporting both avoids broken formulas regardless of model style | Implemented |
+| D-068 | Recommended run history for compliance: metadata only (file name, date, standards, model, status counts, export availability), 90-day retention, deletable; never store procedure text or full results by default; optional "keep full result" for audit cases | Gives traceability without turning the app into a document store; matches the transient-upload decision | Recommended — not yet implemented |
 
 ## 8. Phase 3 implementation decisions (2026-11-14)
 

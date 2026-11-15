@@ -90,6 +90,47 @@ export async function streamChat(
   }
 }
 
+export type ComplianceUpload = {
+  run_id: string;
+  filename: string;
+  clauses: { id: string; heading: string; text: string }[];
+  warnings: string[];
+};
+
+export async function uploadCompliance(file: File, ocr: boolean): Promise<ComplianceUpload> {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("ocr", String(ocr));
+  const res = await fetch("/api/compliance/upload", {
+    method: "POST",
+    credentials: "include",
+    body: fd,
+  });
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const body = await res.json();
+      detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail);
+    } catch {
+      /* ignore */
+    }
+    throw new ApiError(detail, res.status);
+  }
+  return (await res.json()) as ComplianceUpload;
+}
+
+export async function downloadCompliance(runId: string, format: "docx" | "xlsx", fallback: string) {
+  const res = await fetch(`/api/compliance/${runId}/export.${format}`, { credentials: "include" });
+  if (!res.ok) throw new ApiError(`Export failed (HTTP ${res.status})`, res.status);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${fallback}_compliance.${format}`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function formatDate(iso: string): string {
   if (!iso) return "";
   const date = new Date(iso.endsWith("Z") ? iso : iso + "Z");

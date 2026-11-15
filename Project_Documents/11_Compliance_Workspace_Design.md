@@ -1,6 +1,6 @@
 # 11 — Compliance Workspace Design (W3)
 
-**Date:** 2026-11-14  |  **Status:** draft for owner approval  |  **Decision:** D-066
+**Date:** 2026-11-14 (updated 2026-11-15)  |  **Status:** implemented MVP 2026-11-15  |  **Decision:** D-066
 
 ## 1. Purpose
 
@@ -14,14 +14,16 @@ Let the owner upload an internal procedure and compare it, clause by clause, aga
 | Output formats | DOCX report and XLSX matrix |
 | Matching granularity | Clause level |
 | Upload persistence | **None** — the uploaded procedure is processed in a temporary folder and deleted after the run; it is not added to SQLite, FTS or LanceDB |
-| Standards | Selected from the existing indexed library |
+| Standards | Chosen by the owner for each request (AS9100, ISO 9001, ISO 31000 or any other indexed standard); no fixed default |
+| Extra columns | Optional, up to 3 per run (owner names them) |
+| OCR | Opt-in only; off by default |
 | Language | English |
 
 ## 3. User flow
 
 1. Open **Compliance** in the sidebar.
 2. Upload a procedure (PDF/DOCX); the backend extracts text and shows the detected clauses in an editable list (clause number, heading, first lines).
-3. Select one or more standards from the library (searchable list, default collection: Quality ISO SAE).
+3. Name or select one or more standards for this run (searchable library list plus a free-text request such as "compare with AS9100D and ISO 9001").
 4. Choose the model (`gpt-4o-mini` default, `gpt-4o` for deeper analysis) and run.
 5. Watch progress per clause (SSE or polling); cancel at any time.
 6. Review the matrix in the app: procedure clause, requirement, evidence, status, rationale, action, standard page.
@@ -61,6 +63,8 @@ Rules: use only the retrieved standard passages; never invent clause numbers; ma
 ### 4.4 Outputs
 
 **XLSX matrix columns:** `#`, `Procedure clause`, `Procedure heading`, `Procedure excerpt`, `Status`, `Requirement`, `Standard`, `Standard clause`, `Page`, `Evidence`, `Rationale`, `Recommended action`, `Confidence`.
+
+Up to three optional columns can be added per run (for example `Risk rating`, `Action owner`, `Due date`); they are appended after `Confidence` in both XLSX and DOCX.
 
 **DOCX report:** title page (procedure name, standards, date, model), executive summary (counts by status), matrix table, gaps and actions section, methodology and limitations, short quotes only.
 
@@ -109,10 +113,10 @@ Scanned procedures add OCR time (~2–5 s/page). Retrieval uses the existing ind
 | Scanned procedure is slow | OCR opt-in per run; text PDFs recommended |
 | Uploaded content is sensitive | Temp folder deleted after run; no indexing; no chat history entry |
 
-## 8. Questions for owner approval
+## 8. Owner decisions (2026-11-15)
 
-1. Which standards should be offered first — AS9100D and ISO 9001, or also the ISO 31000 / safety-management documents?
-2. Is the proposed matrix (status, requirement, evidence, page, rationale, action) sufficient, or do you need extra columns (e.g., risk rating, due date, owner)?
-3. Should scanned procedures be OCR'd automatically, or only when you explicitly enable it?
-4. Do you want a run history (procedure name, date, standards, result summary) kept locally, or is the exported DOCX/XLSX the only record?
-5. Is the 60-clause / 200-page cap acceptable for your typical procedures?
+1. **Standards:** chosen per request; the owner will name the standard(s) in the request (AS9100, ISO 9001 or any other indexed standard). No fixed default list.
+2. **Extra columns:** optional and request-dependent, up to three additional columns.
+3. **OCR:** only when explicitly enabled.
+4. **Run history — recommended best case:** keep a **metadata-only history** (procedure file name, date, standards, model, status counts, export availability), retained for 90 days and deletable; never store the procedure text or full result by default. Offer an optional "keep full result" switch for audit cases. This gives traceability without turning the app into a document store.
+5. **Size cap:** 60 clauses is more than enough; 200-page cap retained.

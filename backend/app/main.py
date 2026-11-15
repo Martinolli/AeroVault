@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import router
+from app.compliance import router as compliance_router
 from app.config import settings
 
 app = FastAPI(
@@ -21,6 +22,7 @@ app.add_middleware(
 )
 
 app.include_router(router)
+app.include_router(compliance_router)
 
 
 @app.get("/api/health")

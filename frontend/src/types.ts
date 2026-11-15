@@ -48,3 +48,49 @@ export type ViewerTarget = {
   page: number;
   excerpt?: string;
 };
+
+export type ComplianceClause = {
+  id: string;
+  heading: string;
+  text: string;
+};
+
+export type ComplianceResult = {
+  clause_id: string;
+  clause_heading: string;
+  clause_excerpt: string;
+  status: "Compliant" | "Partial" | "Gap" | "Not applicable" | "Unclear";
+  requirement: string;
+  standard: string;
+  standard_clause: string;
+  page: number;
+  document_id: number;
+  evidence: string;
+  rationale: string;
+  action: string;
+  confidence: "High" | "Medium" | "Low";
+  extras: Record<string, string>;
+};
+
+export type ComplianceRun = {
+  run_id: string;
+  filename: string;
+  status: "ready" | "running" | "done" | "cancelled" | "error";
+  progress: number;
+  total: number;
+  model: string;
+  standards: { id: number; title: string; collection: string; pages: number; status: string }[];
+  extra_columns: string[];
+  instructions: string;
+  clauses: ComplianceClause[];
+  results: ComplianceResult[];
+  error: string;
+};
+
+export type StandardDocument = {
+  id: number;
+  title: string;
+  collection: string;
+  pages: number;
+  status: string;
+};

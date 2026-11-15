@@ -3,11 +3,12 @@ import { api, formatDate } from "./lib/api";
 import type { ChatSummary, ViewerTarget } from "./types";
 import { Brand, LoginScreen, SetupScreen } from "./components/Auth";
 import ChatView from "./components/ChatView";
+import ComplianceView from "./components/ComplianceView";
 import Library from "./components/Library";
 import PdfViewer from "./components/PdfViewer";
 
 type AuthState = "loading" | "setup" | "login" | "ready";
-type View = "chat" | "library";
+type View = "chat" | "library" | "compliance";
 
 export default function App() {
   const [auth, setAuth] = useState<AuthState>("loading");
@@ -117,7 +118,7 @@ export default function App() {
           >
             <span className="text-base leading-none">+</span> New question
           </button>
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-3 gap-2 text-sm">
             <button
               type="button"
               onClick={() => {
@@ -141,6 +142,18 @@ export default function App() {
               }`}
             >
               Library
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setView("compliance");
+                setMobileNav(false);
+              }}
+              className={`rounded-lg px-3 py-2 font-medium transition ${
+                view === "compliance" ? "bg-sky-50 text-sky-800" : "text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Compliance
             </button>
           </div>
         </div>
@@ -225,8 +238,10 @@ export default function App() {
             onHistoryChange={() => void loadChats(historyQuery)}
             onOpenSource={setViewer}
           />
-        ) : (
+        ) : view === "library" ? (
           <Library onOpenDocument={setViewer} />
+        ) : (
+          <ComplianceView onOpenSource={setViewer} />
         )}
       </main>
 

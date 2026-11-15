@@ -9,7 +9,8 @@ top-5 63.6% (14/22) vs the 80% target; the LLM reranker (D-054) and `text-embedd
 and rejected. Phase 3 MVP is built and verified locally (auth, library browser, cited streaming chat, PDF.js 
 viewer); **Gate 3 passed on 2026-11-14** (owner review: clean UI, persistent history, good answers on both models,
 tables rendered well). Gate 2 expectation review is in progress (`10_Gate2_Expectation_Review.md`); Phase 4
-(compliance workspace, W3) design is pending owner approval. OCR backfill is running.
+(compliance workspace, W3) MVP is built: PDF/DOCX upload, clause-level comparison against standards named per
+request, DOCX/XLSX export; Gate 4 UAT pending. OCR backfill is running.
 
 ---
 

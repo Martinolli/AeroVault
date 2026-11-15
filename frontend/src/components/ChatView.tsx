@@ -35,7 +35,11 @@ function CitationMarkdown({
   sources: Source[];
   onOpenSource: (target: ViewerTarget) => void;
 }) {
-  const prepared = content.replace(/\[S(\d+)\]/g, (_match, n: string) => `[S${n}](#cite-S${n})`);
+  const prepared = content
+    // Models often emit \( ... \) / \[ ... \] instead of dollar delimiters.
+    .replace(/\\\[([\s\S]*?)\\\]/g, (_match, expr: string) => `\n$$\n${expr}\n$$\n`)
+    .replace(/\\\(([\s\S]*?)\\\)/g, (_match, expr: string) => `$${expr}$`)
+    .replace(/\[S(\d+)\]/g, (_match, n: string) => `[S${n}](#cite-S${n})`);
   const byTag = useMemo(() => new Map(sources.map((s) => [s.tag, s])), [sources]);
 
   return (
