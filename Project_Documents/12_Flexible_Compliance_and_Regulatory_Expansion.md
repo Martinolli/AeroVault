@@ -159,9 +159,9 @@ The existing ingestion pipeline can handle PDFs and DOCX, but regulatory documen
 
 I recommend expanding in tiers, not downloading everything at once.
 
-**Tier 0 — UAE/GCAA first.** Calidus Aerospace operates at Al Ain. The UAE General Civil Aviation Authority publishes CAR-SMS Issue 06 (corrected) and CAR-AIR OPS Part-ORO Issue 01. These may be the most directly applicable SMS and organisation requirements for the owner's daily work. They should be confirmed with the owner before FAA or EASA material becomes the primary reference.
+**Tier 0 — FAA/EASA first (owner decision, 2026-11-15).** The owner wants FAA and EASA as the main sources because they are widely accepted international benchmarks. The first regulatory pack should therefore prioritise FAA regulations/advisory material and EASA regulations/AMC/GM. GCAA and ICAO remain secondary references: GCAA for the UAE operating context, ICAO for the international SMS framework and Annex 19.
 
-**Tier 1 — SMS and emergency-response frameworks.** Add ICAO Annex 19 and the ICAO Safety Management Manual framework, FAA 14 CFR Part 5 with AC 120-92D, and EASA Part-ORO with the associated AMC/GM. This tier directly supports P-600-007 and the first gap reviews. ICAO's public SMS framework page lists the four components and twelve elements, including the emergency-response element [1]. FAA AC 120-92D is active, dated 2024-05-21, and cancels AC 120-92B [2]. EASA's Easy Access Rules for Air Operations, Revision 24 (March 2026), are available as PDF and machine-readable XML [3].
+**Tier 1 — SMS and emergency-response frameworks.** Add FAA 14 CFR Part 5 with AC 120-92D, EASA Part-ORO with the associated AMC/GM, and then ICAO Annex 19 / the ICAO Safety Management Manual framework. This tier directly supports P-600-007 and the first gap reviews. ICAO's public SMS framework page lists the four components and twelve elements, including the emergency-response element [1]. FAA AC 120-92D is active, dated 2024-05-21, and cancels AC 120-92B [2]. EASA's Easy Access Rules for Air Operations, Revision 24 (March 2026), are available as PDF and machine-readable XML [3].
 
 **Tier 2 — airworthiness and quality.** Add FAA 14 CFR Parts 21, 23, 25, 43, 91, 121, 135, and 145, plus the relevant advisory circulars; add EASA Part-21, Part-M, Part-145, CS-23/25, and the operational parts that matter to Calidus. This is a larger collection and should be scoped by use case, not by authority.
 
@@ -201,25 +201,35 @@ The improvement review should also catch document-quality issues that a complian
 
 ## 8. Delivery sequence
 
-**Step 1 — approve the product model.** Confirm the three modes, the primary regulator, and the first framework pack. No code change is needed until these choices are clear.
+**Step 1 — approve the product model.** The owner has confirmed FAA/EASA as primary sources, problem-driven analysis first, both uploaded and library documents, no fixed output template, and metadata-only history. The remaining choice is the first domain and the core-pack option.
 
 **Step 2 — extend the compliance engine.** Add mode, document profile, problem brief, framework packs, applicability, and the richer result schema. Keep the current clause-level flow as Mode A rather than replacing it.
 
-**Step 3 — build the first regulatory collection.** Start with GCAA CAR-SMS and the SMS/ERP frameworks in Tier 1. Add the source register, authority metadata, regulatory citation formatter, and a small regulatory benchmark.
+**Step 3 — build the first regulatory collection.** Start with the FAA/EASA core pack (Option A in `13_Regulatory_Source_Inventory.md`). Add the source register, authority metadata, regulatory citation formatter, and a small regulatory benchmark. Add ICAO and GCAA as secondary collections after the FAA/EASA pack is usable.
 
 **Step 4 — run three UAT scenarios.** (1) P-600-007 against the SMS framework, (2) a real procedure plus a real problem brief against the applicable standard, and (3) a regulatory question that requires an FAA or EASA citation. Gate 4 is passed only when the owner can complete these without assistance and the citations are usable.
 
 **Step 5 — expand by tier.** Add FAA/EASA operational and airworthiness material only after the first collection proves useful. Keep the source register and version checks in the loop.
 
-## 9. Decisions needed from the owner
+## 9. Owner decisions and remaining questions
 
-1. **Primary regulator and first framework.** Is GCAA CAR-SMS the primary reference for Calidus, with ICAO as the international framework and FAA/EASA as secondary comparisons? Or should FAA/EASA be first?
-2. **First mode.** Should the first implementation be the SMS/ERP gap review, the problem-driven analysis, or both in the same release?
-3. **Document inputs.** Should Compliance accept only uploaded files, or also let the owner select an indexed library document as the procedure under review?
-4. **Output.** Is the current matrix plus DOCX report enough, or does the problem mode need a specific report template (for example, a formal investigation or corrective-action format)?
-5. **Run history.** Do you approve the recommended metadata-only history: file name, date, mode, standards, model, status counts, 90-day retention, deletable, with no procedure text stored?
-6. **Regulatory access.** Do you have ICAO eLibrary/ICAO-NET access, and are you willing to download licensed ICAO documents locally? This determines whether ICAO material can be indexed or only linked.
-7. **Expansion scope.** Which FAA/EASA areas matter most: SMS and operations, airworthiness and certification, maintenance, or quality? This sets Tier 2.
+**Confirmed by the owner on 2026-11-15:**
+
+1. **Primary sources:** FAA and EASA, because they are widely accepted internationally. GCAA and ICAO are secondary references.
+2. **First mode:** problem-driven analysis. The ERP is an example of the type of request; the answer may be flexible according to the available library.
+3. **Document inputs:** both uploaded documents and indexed library documents.
+4. **Output:** no fixed model or formal report template is required; the analysis can follow the evidence and the owner's instruction.
+5. **Run history:** metadata-only history approved (file name, date, mode, sources, model, status counts, 90-day retention, deletable, no procedure text).
+6. **Source access:** the owner has an ICAO library and local FAA, EASA, AQAP, and NASA folders.
+
+**Remaining decisions:**
+
+1. **First domain:** certification/design (Part 21/23/25, CS-23/25), maintenance (Part 43/145, Part-M/CAMO), operations (Part 91/121/135, Part-ORO/CAT/NCO), or quality/defence (AS9100, AQAP)?
+2. **Core pack:** approve Option A (focused FAA/EASA core pack), Option B (index everything), or Option C (owner-curated list) in `13_Regulatory_Source_Inventory.md`.
+3. **Secondary sources:** should AQAP and NASA be indexed now, later, or kept out of the regulatory filter?
+4. **Other authorities:** should CAA UK/Australia/Canada/New Zealand, MAA, MIL DoD, SMICG, and SCMH be included now or deferred?
+5. **Missing official documents:** should I download missing FAA/EASA documents from official sources into a managed `Regulatory_Library` folder, or will you supply them?
+6. **ICAO 4th edition:** do you have Doc 9859 4th edition in ICAO eLibrary/ICAO-NET, or should the app use the 3rd edition already in the folder and label it as older?
 
 ## References
 

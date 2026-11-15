@@ -1,6 +1,6 @@
 # 1 — Aviation Library Assistant: Project Plan
 
-**Version:** 0.8 (Phase 4 flexibility strategy under owner review)
+**Version:** 0.9 (FAA/EASA regulatory pack and problem-driven mode)
 **Date:** 2026-11-15
 **Owner:** J. B. Martinolli
 **Status:** Gates 0 and 1 passed. Phase 2 index is nearly complete (519 indexed, 2 partial, 1 `text_only`;
@@ -9,10 +9,11 @@
 pages, so no expectation changes were made. The LLM reranker (D-054) and `text-embedding-3-large` (D-062)
 were tested and rejected. Phase 3 MVP is built and verified locally; **Gate 3 passed on 2026-11-14**. Phase 4
 (compliance workspace, W3) MVP is built: PDF/DOCX upload, clause-level comparison against standards named per
-request, DOCX/XLSX export. The owner now wants a more flexible workflow: document-versus-SMS-framework gap and
-improvement reviews, and problem-driven analysis of a procedure against an applicable standard; FAA and EASA
-material is the next library expansion. Strategy is in `12_Flexible_Compliance_and_Regulatory_Expansion.md`
-(awaiting owner decisions). Gate 4 UAT pending.
+request, DOCX/XLSX export. The owner now wants a more flexible workflow: **problem-driven analysis first**, with
+both uploaded and indexed library documents, followed by document-versus-framework gap/improvement reviews.
+**FAA and EASA are the primary reference sources**; ICAO, GCAA, AQAP and NASA are secondary. The regulatory
+inventory is in `13_Regulatory_Source_Inventory.md`; strategy is in `12_Flexible_Compliance_and_Regulatory_Expansion.md`.
+The remaining decisions are the first domain and core-pack option. Gate 4 UAT pending.
 
 ---
 
