@@ -1,8 +1,11 @@
 # Gate 5 — Security Review
 
-**Project:** AeroVault  
-**Review date:** 2026-11-15  
-**Reviewer:** Manus, for J. B. Martinolli  
+**Project:** AeroVault
+
+**Review date:** 2026-11-15
+
+**Reviewer:** Manus, for J. B. Martinolli
+
 **Scope approved by owner:** full local review; single trusted owner; localhost-only threat model; fix Critical/High immediately; document Medium/Low; OWASP ASVS-lite plus STRIDE; no secrets printed; Gate 5 security passes only with no open Critical/High findings.
 
 ## 1. Executive summary
@@ -11,8 +14,11 @@ AeroVault's authentication boundary, route protection, file-path handling, uploa
 
 Three meaningful Medium issues were also closed in this pass: login throttling promised by the plan but not implemented, prompt-injection guidance for document text, and spreadsheet formula injection in XLSX exports. The remaining Medium/Low items are deployment and handover decisions, not exploitable code defects under the stated threat model. The most important is that `.env` and `data/aerovault.db` are inside the OneDrive tree and are marked as OneDrive reparse points; OneDrive is running. The API key and chat/password data may therefore leave the PC through the owner's cloud account.
 
-**Security gate result: PASS — no open Critical or High findings after remediation.**  
+**Security gate result: PASS — no open Critical or High findings after remediation.**
+
 **Overall Gate 5: pending owner acceptance of the documented Medium/Low risks, the OneDrive decision, backup/restore verification, and final handover sign-off.**
+
+**Owner acceptance:** recorded in `16_Gate5_Owner_Signoff.md` on 2026-11-15.
 
 ## 2. Scope, assets and assumptions
 
