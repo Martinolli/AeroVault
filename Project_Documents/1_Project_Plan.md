@@ -3,7 +3,7 @@
 **Version:** 1.0 (problem-driven compliance, metadata history, regulatory fetcher)
 **Date:** 2026-11-15
 **Owner:** J. B. Martinolli
-**Status:** Gates 0 and 1 passed. Phase 2 index is nearly complete (526 indexed, 2 partial, 1 `text_only`;
+**Status:** Gates 0, 1, 3 and 4 passed. Phase 2 index is nearly complete (526 indexed, 2 partial, 1 `text_only`;
 209,666 chunks; 528 documents with vectors). **Gate 2 is not passed**: the tuned retrieval (title-aware RRF, D-061) scores top-5 63.6%
 (14/22) vs the 80% target; the owner reviewed the eight misses on 2026-11-15 and kept the current expected
 pages, so no expectation changes were made. The LLM reranker (D-054) and `text-embedding-3-large` (D-062)
@@ -16,7 +16,8 @@ place and the approved core pack is downloaded, checksummed, indexed and vectori
 Operations Rev 24 (2,566 pages, 3,038 chunks). The EASA XML archive is stored for future machine-readable use.
 **FAA and EASA are the primary reference sources**; ICAO, GCAA, AQAP and NASA are secondary. The regulatory
 inventory is in `13_Regulatory_Source_Inventory.md`; strategy is in `12_Flexible_Compliance_and_Regulatory_Expansion.md`.
-The owner approved Option A (focused FAA/EASA core pack) and problem-driven analysis first. Gate 4 UAT is pending.
+The owner approved Option A (focused FAA/EASA core pack) and problem-driven analysis first. **Gate 4 passed on
+2026-11-15**: five-scenario UAT, exports, history check and citation-viewer retest all passed after the path fix recorded in S-040.
 
 ---
 
@@ -212,8 +213,8 @@ the library or embedded. Run history is metadata only (90 days, deletable).
 
 ## 17. Immediate next steps
 
-1. Owner runs Gate 4 UAT on the problem-driven workflow: one real problem brief with an uploaded procedure, one with an indexed document, one improvement review and one gap review; verify citations and both exports.
+1. Gate 4 is passed; proceed to Gate 5 hardening and handover: security review, backups, install guide, user manual and owner sign-off.
 2. The FAA/EASA Option A core pack is downloaded, checksummed, indexed and vectorised: seven documents / 4,065 chunks (FAA Parts 5/91/121/135, AC 120-92D, AC 21-58; EASA EAR Air Operations Rev 24). The EASA XML archive is retained for future section-level processing.
 3. Add a small source register/revision view. Retrieval has been tested against known FAA and EASA clauses; eCFR text sources still cite page 1, so section-level citation mapping is the next improvement.
 4. Resume the OCR backfill only when the owner is not using the app; Gate 2 remains open at 63.6% top-5 (14/22) with the owner-confirmed expectations.
-5. Run the live `gpt-4o-mini` problem test after the citation-verification change; the first live run completed with 12 FAA citations and a complete narrative, and the new evidence-to-page validator plus regression test now reject unsupported pages.
+5. The live `gpt-4o-mini` problem test completed with 12 FAA citations and a complete narrative; the evidence-to-page validator plus regression test reject unsupported pages.

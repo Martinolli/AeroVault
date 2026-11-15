@@ -156,14 +156,45 @@ def page_text(
     return {"document_id": doc_id, "page_no": row["page_no"], "text": row["text"], "ocr": bool(row["ocr_used"])}
 
 
+def _media_type(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix == ".pdf":
+        return "application/pdf"
+    if suffix in {".txt", ".md", ".csv"}:
+        return "text/plain; charset=utf-8"
+    if suffix == ".docx":
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    if suffix == ".xlsx":
+        return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    return "application/octet-stream"
+
+
+def _resolve_document_path(rel_path: str) -> Path:
+    """Resolve a document in either the main library or the managed regulatory store."""
+    rel = str(rel_path or "").strip()
+    if not rel or Path(rel).is_absolute():
+        raise HTTPException(status_code=404, detail="File not found")
+
+    roots = [
+        Path(settings.library_root).resolve(),
+        (Path(settings.data_dir) / "regulatory_library").resolve(),
+    ]
+    for root in roots:
+        path = (root / rel).resolve()
+        try:
+            path.relative_to(root)
+        except ValueError:
+            continue
+        if path.is_file():
+            return path
+    raise HTTPException(status_code=404, detail="File not found")
+
+
 @router.get("/documents/{doc_id}/file")
 def document_file(doc_id: int, user=Depends(current_user), conn=Depends(get_conn)) -> FileResponse:
     doc = _document(conn, doc_id)
-    root = Path(settings.library_root).resolve()
-    path = (root / doc["rel_path"]).resolve()
-    if not str(path).startswith(str(root)) or not path.is_file():
-        raise HTTPException(status_code=404, detail="File not found")
-    return FileResponse(str(path), media_type="application/pdf", filename=path.name)
+    path = _resolve_document_path(doc["rel_path"])
+    return FileResponse(str(path), media_type=_media_type(path), filename=path.name)
 
 
 @router.post("/chat")
