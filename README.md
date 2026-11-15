@@ -6,10 +6,11 @@ Local, password-protected web app that indexes the aviation library (Aircraft Th
 
 **Phase 4 — problem-driven compliance workspace.** Login, library browser, cited chat, PDF viewer, the compliance
 workspace and metadata-only run history are implemented. Gate 2 remains open at 63.6% top-5 (14/22) against the
-80% target; Gates 0, 1 and 3 passed. The FAA half of the approved core pack is downloaded, checksummed, indexed
-and vectorised (Parts 5/91/121/135, AC 120-92D and AC 21-58; six documents, 1,027 chunks). EASA Easy Access Rules
-are the remaining core-pack item. Problem-mode citations are evidence-validated; unsupported pages are shown as
-unverified instead of being guessed.
+80% target; Gates 0, 1 and 3 passed. The approved core pack is downloaded, checksummed, indexed and vectorised:
+FAA Parts 5/91/121/135, AC 120-92D and AC 21-58 (six documents, 1,027 chunks), plus the EASA Easy Access Rules for
+Air Operations Rev 24 (2,566 pages, 3,038 chunks). The EASA XML archive is retained for future section-level
+processing. Problem-mode citations are evidence-validated; unsupported pages are shown as unverified instead of
+being guessed.
 
 ## Layout
 

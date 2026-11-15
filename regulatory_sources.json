@@ -119,16 +119,35 @@
       "authority": "EASA",
       "document_type": "easy_access_rules",
       "title": "Easy Access Rules for Air Operations — Revision 24",
-      "url": "https://www.easa.europa.eu/en/document-library/easy-access-rules/easy-access-rules-air-operations",
+      "url": "https://www.easa.europa.eu/en/downloads/20342/en",
       "version": "Revision 24 (March 2026)",
       "effective_date": "2026-03-27",
       "applicability": "EU air operations: Part-ARO, ORO, CAT, SPA, NCC, NCO, SPO and associated AMC/GM",
-      "access_note": "Official EASA landing page. Download the PDF or machine-readable XML from the page; EASA material may be copyrighted and must not be redistributed. The downloader records the landing page only unless a direct PDF/XML URL is added.",
-      "filename": "EASA_EAR_Air_Operations_R24.html",
+      "access_note": "Official EASA PDF download endpoint. EASA material may be copyrighted and must not be redistributed. Keep the local file private.",
+      "filename": "EASA_EAR_Air_Operations_R24.pdf",
       "tags": [
         "easa",
         "ear",
         "operations",
+        "primary"
+      ]
+    },
+    {
+      "id": "easa-ear-air-ops-xml",
+      "authority": "EASA",
+      "document_type": "easy_access_rules_xml",
+      "title": "Easy Access Rules for Air Operations — Revision 24 (XML archive)",
+      "url": "https://www.easa.europa.eu/en/downloads/136682/en",
+      "version": "Revision 24 (March 2026)",
+      "effective_date": "2026-03-27",
+      "applicability": "Machine-readable version of the EU air operations rules and AMC/GM",
+      "access_note": "Official EASA XML ZIP download endpoint. EASA material may be copyrighted and must not be redistributed.",
+      "filename": "EASA_EAR_Air_Operations_R24.zip",
+      "tags": [
+        "easa",
+        "ear",
+        "operations",
+        "xml",
         "primary"
       ]
     }
